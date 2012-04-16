@@ -6,19 +6,20 @@ import java.util.List;
 import pilot.core.DataItem;
 import pilot.core.Task;
 import pilot.core.TaskContainer;
-
-import bigs.api.core.BIGSParam;
-
-
+import pilot.core.TextSerializable;
 
 public class DataPartitionTaskContainer extends TaskContainer {
 
-	@BIGSParam
 	public Integer numberOfPartitions = 1;
 	
 	Integer partitionNumber = null;
 	
-	public DataPartitionTaskContainer() {}
+	public DataPartitionTaskContainer() {		
+	}
+	
+	public DataPartitionTaskContainer(Integer numberOfPartitions) {
+		this.numberOfPartitions = numberOfPartitions;
+	}
 	
 	public DataPartitionTaskContainer(Integer numberOfPartitions, Integer partitionNumber) {
 		this.numberOfPartitions = numberOfPartitions;
@@ -30,15 +31,13 @@ public class DataPartitionTaskContainer extends TaskContainer {
 	}
 
 	@Override
-	public void processPreSubContainers() {
-		// TODO Auto-generated method stub
-		
+	public TextSerializable processPreSubContainers(TextSerializable previousState) {
+		return null;
 	}
 
 	@Override
-	public void processPostSubContainers() {
-		// TODO Auto-generated method stub
-		
+	public TextSerializable processPostSubContainers(TextSerializable previousState) {
+		return null;
 	}
 
 	@Override
@@ -70,23 +69,20 @@ public class DataPartitionTaskContainer extends TaskContainer {
 	}
 
 	@Override
-	public void processPreDataBlock() {
-		// TODO Auto-generated method stub
+	public void processPreDataBlock(TextSerializable previousState) {
 		
 	}
 
 	@Override
 	public DataItem processDataItem(DataItem dataItem) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public void processPostDataBlock() {
-		// TODO Auto-generated method stub
+	public TextSerializable processPostDataBlock() {
+		return null;
 		
 	}
-
 
 	@Override
 	public String toString() {
@@ -96,17 +92,14 @@ public class DataPartitionTaskContainer extends TaskContainer {
 	}
 
 	@Override
-	public void processPreMyContainers() {
-		// TODO Auto-generated method stub
-		
+	public TextSerializable processPreLoop(TextSerializable previousState) {
+		return null;
 	}
 
 	@Override
-	public void processPostMyContainers() {
-		// TODO Auto-generated method stub
-		
+	public TextSerializable processPostLoop(List<TextSerializable> previousState) {
+		return null;
 	}
-
 	
 
 }

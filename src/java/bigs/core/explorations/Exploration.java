@@ -14,6 +14,8 @@ import java.util.Properties;
 
 import org.apache.hadoop.hbase.util.Bytes;
 
+import pilot.core.PipelineStage;
+
 import bigs.api.core.Configurable;
 import bigs.api.core.BIGSParam;
 import bigs.api.exceptions.BIGSException;
@@ -34,11 +36,10 @@ public class Exploration extends Properties {
 	
 	private static final long serialVersionUID = 1L;
 	
-	public final static String tableName = "explorations";
+	public final static String tableName = "pipelines";
 	public final static String[] columnFamilies = new String[]{"spec", "bigs"};
 
 	static String[] allowedStages = new String[]{ "01", "02", "03", "04" };
-	static String lstage      = "stage";
 	
 	public final static Integer STATUS_NONE   = 0;
 	public final static Integer STATUS_NEW    = 1;
@@ -59,7 +60,7 @@ public class Exploration extends Properties {
 	Date timeDone  = null;
 	
 	
-	List<ExplorationStage> declaredStages = new ArrayList<ExplorationStage>();
+	List<PipelineStage> declaredStages = new ArrayList<PipelineStage>();
 
 	public Long getExplorationNumber() {
 		return explorationNumber;
@@ -165,7 +166,7 @@ public class Exploration extends Properties {
 	 * Stages are parsed and created in the load method.
 	 * @return
 	 */
-	public List<ExplorationStage> getStages() {
+	public List<PipelineStage> getStages() {
 		return declaredStages;
 	}
 	
@@ -187,14 +188,14 @@ public class Exploration extends Properties {
     	
     	List<String> stages = new ArrayList<String>();
     	for (String stage: allowedStages ) {
-    		if (this.hasAnyPropertyWithPrefix(lstage+"."+stage)) {
+    		if (this.hasAnyPropertyWithPrefix(PipelineStage.lprefix+"."+stage)) {
     			stages.add(stage);
     		}
     		else break;
     	}
     	
     	for (String stage: stages) {
-    		ExplorationStage eStage = new ExplorationStage(this, stage);
+    		PipelineStage eStage = new PipelineStage(this, new Integer(stage));
     		declaredStages.add(eStage);
     	}
     }	

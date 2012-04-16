@@ -30,30 +30,35 @@ public abstract class TaskContainer implements Configurable {
 	public abstract Boolean supportsParallelization();
 
 	
-	public abstract void processPreSubContainers();
+	public abstract TextSerializable processPreSubContainers(TextSerializable previousState);
 	
-	public abstract void processPostSubContainers();
+	public abstract TextSerializable processPostSubContainers(TextSerializable previousState);
 		
 	
-	public abstract void processPreMyContainers();
+	public abstract TextSerializable processPreLoop(TextSerializable previousState);
 	
-	public abstract void processPostMyContainers();	
+	public abstract TextSerializable processPostLoop(List<TextSerializable> previousStates);	
 
-	
-	public abstract void processPreDataBlock();
+	/**
+	 * returs void because pre-process-post all run within the same process and, thus, 
+	 * only post needs to return a state for the framework to handle
+	 * @param previousState
+	 */
+	public abstract void processPreDataBlock(TextSerializable previousState);
 	
 	public abstract DataItem processDataItem(DataItem dataItem);
 
-	public abstract void processPostDataBlock();
+	public abstract TextSerializable processPostDataBlock();
 			
 	
-	public List<TaskContainer> getTaskLevels() {
+	public List<TaskContainer> getTaskContainers() {
 		return taskContainers;
 	}
 		
 	public void addTaskContainer(TaskContainer taskContainer) {
 		taskContainers.add(taskContainer);
 		taskContainer.setParentTaskContainer(this);
+		taskContainer.setPipelineStage(this.getPipelineStage());
 	}
 
 	public TaskContainer getParentTaskContainer() {
@@ -83,39 +88,46 @@ public abstract class TaskContainer implements Configurable {
 	}
 
 	
-	public Integer list(String prefix, Integer priority, List<ScheduleItem> schedule, ScheduleItem parentScheduleItem) {
+	/**
+	 * Returns the last schedule item of the list.
+	 * 
+	 * @param prefix
+	 * @param schedule
+	 * @param parentScheduleItem
+	 * @return
+	 */
+	public ScheduleItem fillSchedule(Schedule schedule, ScheduleItem parentScheduleItem) {
 		if (!this.taskContainers.isEmpty()) {
-			
-			ScheduleItem p1 = new ScheduleItem(this.getClass().getName(), this.toString(), "preSubContainers", priority, parentScheduleItem);
-			schedule.add(p1);
-			System.out.println(Text.zeroPad(new Long(priority), 3)+" "+prefix+this.toString()+".preSubContainers");			
+			ScheduleItem p1 = new ScheduleItem(schedule, this, pipelineStage.configuredTask, "preSubContainers");
+			if (parentScheduleItem!=null) p1.addParentId(parentScheduleItem.getId());
 
 			TaskContainer th = this.taskContainers.get(0).clone();
-			priority++;
-			ScheduleItem p2 = new ScheduleItem(th.getClass().getName(), th.toString(), "preMyContainers", priority, p1);
-			schedule.add(p2);
-			System.out.println(Text.zeroPad(new Long(priority), 3)+" "+prefix+"   "+th.toString()+".preMyContainers");
+			ScheduleItem p2 = new ScheduleItem(schedule, th, pipelineStage.configuredTask,  "preLoop").addParentId(p1.getId());
 
-			priority++;			
-			Integer returningPriority = priority;
-			for (TaskContainer tb: this.taskContainers) {
-				returningPriority = tb.list(prefix+"      ", priority, schedule, p2);
-				if (tb!=this.taskContainers.get(this.taskContainers.size()-1) && !tb.supportsParallelization()) {
-					priority = returningPriority + 1;
+			List<Integer> subContainerParentsIds = new ArrayList<Integer>();
+			if (this.taskContainers.size()>0) {
+				Boolean isParallel = th.supportsParallelization();
+				ScheduleItem parent = p2;
+				for (TaskContainer tb: this.taskContainers) {
+					ScheduleItem item = tb.fillSchedule(schedule, parent);
+					if (isParallel) {
+						subContainerParentsIds.add(item.getId());
+					} else {
+						if (tb == this.taskContainers.get(this.taskContainers.size()-1)) {
+							subContainerParentsIds.add(item.getId());
+						}
+						parent = item;
+					}				
 				}
 			}
-			priority = returningPriority + 1;
-			schedule.add(new ScheduleItem(th.getClass().getName(), th.toString(), "postMyContainers", priority, p1));
-			System.out.println(Text.zeroPad(new Long(priority), 3)+" "+prefix+"   "+th.toString()+".postMyContainers");
+				
+			ScheduleItem p3 = new ScheduleItem(schedule, th	, pipelineStage.configuredTask, "postLoop").addParentsIds(subContainerParentsIds);
 
-			priority++;
-			schedule.add(new ScheduleItem(this.getClass().getName(), this.toString(), "postSubContainers", priority, parentScheduleItem));
-			System.out.println(Text.zeroPad(new Long(priority), 3)+" "+prefix+this.toString()+".postSubContainers");
-			return priority;
+			ScheduleItem p4 = new ScheduleItem(schedule, this, pipelineStage.configuredTask, "postSubContainers").addParentId(p3.getId());
+			return p4;
 		} else {
-			schedule.add(new ScheduleItem(this.getClass().getName(), this.toString(), "LOOP processDataItem", priority, parentScheduleItem));
-			System.out.println(Text.zeroPad(new Long(priority), 3)+" "+prefix+this.toString()+" LOOP processDataItem");			
-			return priority;
+			ScheduleItem p = new ScheduleItem(schedule, this, pipelineStage.configuredTask, "LOOP processDataItem").addParentId(parentScheduleItem.getId());
+			return p;
 		}
 	}
 	

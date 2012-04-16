@@ -4,6 +4,10 @@ import java.util.List;
 
 public class TopLevelTaskContainer extends TaskContainer {
 
+	public TopLevelTaskContainer(PipelineStage pipelineStage) {
+		this.setPipelineStage(pipelineStage);
+	}
+	
 	@Override
 	public List<Class<? extends TaskContainer>> allowedTaskContainers() {
 		// TODO Auto-generated method stub
@@ -29,44 +33,38 @@ public class TopLevelTaskContainer extends TaskContainer {
 	}
 
 	@Override
-	public void processPreSubContainers() {
-		// TODO Auto-generated method stub
-		
+	public TextSerializable processPreSubContainers(TextSerializable previousState) {
+		return null;
 	}
 
 	@Override
-	public void processPostSubContainers() {
-		// TODO Auto-generated method stub
-		
+	public TextSerializable processPostSubContainers(TextSerializable previousState) {
+		return null;
 	}
 
 	@Override
-	public void processPreMyContainers() {
-		// TODO Auto-generated method stub
-		
+	public TextSerializable processPreLoop(TextSerializable previousState) {
+		return null;
 	}
 
 	@Override
-	public void processPostMyContainers() {
-		// TODO Auto-generated method stub
-		
+	public TextSerializable processPostLoop(List<TextSerializable> previousState) {
+		return null;
 	}
 
 	@Override
-	public void processPreDataBlock() {
-		// TODO Auto-generated method stub
+	public void processPreDataBlock(TextSerializable previousState) {
 		
 	}
 
 	@Override
 	public DataItem processDataItem(DataItem dataItem) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public void processPostDataBlock() {
-		// TODO Auto-generated method stub
+	public TextSerializable processPostDataBlock() {
+		return null;
 		
 	}
 

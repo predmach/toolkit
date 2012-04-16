@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import pilot.core.PipelineStage;
+import pilot.core.Schedule;
 import pilot.core.ScheduleItem;
 
 import bigs.api.core.Algorithm;
@@ -27,6 +28,7 @@ import bigs.core.explorations.Evaluation;
 import bigs.core.explorations.Exploration;
 import bigs.core.explorations.ExplorationStage;
 import bigs.core.utils.Log;
+import bigs.core.utils.Text;
 import bigs.modules.storage.dynamodb.DynamoDBDataSource;
 
 import com.amazonaws.services.dynamodb.model.Key;
@@ -78,16 +80,29 @@ public class Test extends Command {
     	Properties props = new Properties();
     	props.load(new FileReader(new File(args[0])));
     	
-    	PipelineStage p = PipelineStage.fromProperties(props, 1);    
+    	Exploration expl = new Exploration();
+    	expl.load(new FileReader(new File(args[0])));
     	
+    	PipelineStage p = expl.getStages().get(0);
     	p.printOut();
 System.out.println();    	
 System.out.println();    	
-    	List<ScheduleItem> schedule = p.list();
+    	Schedule schedule = p.generateSchedule();
 System.out.println();    	
 System.out.println();    	
-		for (ScheduleItem si: schedule) {
-			System.out.println(si.toString());
+		for (ScheduleItem si: schedule.getItems()) {
+			String parents = "";
+			for (Integer pi: si.getParentsIds()) {
+				parents = parents + pi ;
+				if (pi!=si.getParentsIds().get(si.getParentsIds().size()-1)) {
+					parents = parents + " ";
+				}
+			}
+
+			String prefix = "";
+//			for (int i=0; i<si.getLevel();i++) prefix = prefix + "   ";
+			System.out.println(Text.zeroPad(new Long(si.getId()),3)+" "
+		                      +prefix+  " ("+parents+") " +si.toString());
 		}
     	
     }
@@ -209,60 +224,6 @@ System.out.println();
     	
     }
     
-    void test01(String[] args) throws Exception {
-		Log.info("testing stuff");
-		
-		File props = new File(args[0]);
-		Log.info("using properties file at "+props.toString());
-		
-		Exploration expl = new Exploration();
-		expl.load(new FileReader(props));
-		
-		List<ExplorationStage> stages = expl.getStages();
-		for (ExplorationStage stage: stages) {
-			System.out.println("----> stage "+stage.toString());
-			for (Algorithm f: stage.getConfiguredAlgorithmList()) {
-				System.out.println("    generated fe configuration "+f.toString());
-			}
-		}
-
-				
-		// storage sample generic usage
-		DataSource dataSource = stages.get(0).getConfiguredOriginDataSource();
-		Table table = dataSource.getTable("test");
-
-		Get   get   = table.createGetObject("fe43");
-		get.addColumn("content", "raw");
-		Result r = table.get(get);
-		byte[] rawImage = r.getValue("content", "raw");
-		if (rawImage!=null) {
-			String s = new String(rawImage);
-			Log.info("got value "+s);
-		} else {
-			Log.info("no value for fe43");
-		}
-		
-		
-		Put   put   = table.createPutObject("config5");
-		put.add("content", "lowPass", "123.21 923.1 87.2 3.3".getBytes());
-		put.add("meta", "type", "config".getBytes());
-		table.put(put);
-		Log.info("just put image");
-		
-		Scan scan = table.createScanObject();
-//		scan.addColumn("content", "lowPass");
-		ResultScanner rs = table.getScan(scan);
-		try {
-			for (Result rr = rs.next(); rr!=null; rr = rs.next()) {
-				String value = new String(rr.getValue("content", "lowPass"));
-				Log.info("row "+rr.getRowKey());
-				Log.info("value "+value);
-			}
-		} finally {
-			rs.close();
-		}
-	}
-
 	@Override
 	public String getDescription() {
 		return "command for testing stuff";

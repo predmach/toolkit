@@ -36,26 +36,6 @@ import bigs.core.explorations.Exploration;
 public class Data {
 	
 	public static String[] dataTableColumnFamilies = new String[] {"bigs", "content", "metadata", "splits"};
-	/*
-	public static Map<String, List<String>> dataTableColumnsPerFamily = new HashMap<String, List<String>>();
-	
-	static {
-		dataTableColumnsPerFamily.put("bigs", new ArrayList<String>());
-		dataTableColumnsPerFamily.put("content", new ArrayList<String>());
-		dataTableColumnsPerFamily.put("metadata", new ArrayList<String>());
-		dataTableColumnsPerFamily.put("splits", new ArrayList<String>());
-		
-		dataTableColumnsPerFamily.get("bigs").add("hostname");
-		dataTableColumnsPerFamily.get("bigs").add("uuid");
-		dataTableColumnsPerFamily.get("bigs").add("importDate");
-		
-		dataTableColumnsPerFamily.get("content").add("data");
-		
-		dataTableColumnsPerFamily.get("metadata").add("path");
-		dataTableColumnsPerFamily.get("metadata").add("type");
-		dataTableColumnsPerFamily.get("metadata").add("size");
-	}
-*/
 	/**
 	 * creates core bigs tables and field information in data source if the don't exist
 	 * @param dataSource

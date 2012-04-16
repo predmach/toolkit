@@ -29,7 +29,7 @@ public class ExplorationStage {
 	public ExplorationStage(Exploration exploration, String stage) {
 		this.exploration = exploration;
 		this.stage = stage;
-		this.prefix = Exploration.lstage+"."+stage;
+		this.prefix = "stage."+stage;
 		
 		try {
 			this.numberOfSplits = Text.parseObject(exploration.getProperty(prefix+"."+lnumberOfSplits), Integer.class);

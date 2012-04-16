@@ -50,7 +50,7 @@ public class ExplorationPrepare extends Command {
 		Long explorationNumber = new Long(args[0]);
 		Exploration expl = Exploration.fromExplorationNumber(explorationNumber);
 
-		
+/*		
 		List<ExplorationStage> stages = expl.getStages();
 		if (stages.size()==0) {
 			throw new BIGSException("no stages defined in exploratin file");
@@ -72,6 +72,7 @@ public class ExplorationPrepare extends Command {
     	expl.setTimeStart(null);
     	expl.save();
     	Log.info("exploration marked as active");
+*/    	
 	}
 
 	@Override

@@ -159,7 +159,7 @@ public class Worker {
 
 	
 	public void doEval(Evaluation eval) {
-		
+/*		
 		Log.info("worker on eval "+eval.toString());
 		currentEvaluation = eval;
 
@@ -220,6 +220,7 @@ public class Worker {
 			rs.close();
 		}		
 		currentEvaluation = null;
+*/		
 	}
 	
 	public String toString() {

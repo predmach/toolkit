@@ -3,7 +3,7 @@ package pilot.core;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DataItem implements TextRepresentable {
+public class DataItem implements TextSerializable {
 
 	List<List<Double>> data = new ArrayList<List<Double>>();
 	
@@ -32,7 +32,7 @@ public class DataItem implements TextRepresentable {
 	}
 
 	@Override
-	public TextRepresentable fromTextRepresentation(String textRepresentation) {
+	public TextSerializable fromTextRepresentation(String textRepresentation) {
 		// TODO Auto-generated method stub
 		return null;
 	}
