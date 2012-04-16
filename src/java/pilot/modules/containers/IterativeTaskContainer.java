@@ -11,9 +11,11 @@ import pilot.core.TextSerializable;
 
 public class IterativeTaskContainer extends TaskContainer {
 
+	@BIGSParam
 	public Integer numberOfIterations;
 	
-	Integer iterationNumber = null;
+	@BIGSParam
+	public Integer iterationNumber = null;
 	
 	public IterativeTaskContainer() {		
 	}
@@ -94,6 +96,12 @@ public class IterativeTaskContainer extends TaskContainer {
 
 	@Override
 	public TextSerializable processPostLoop(List<TextSerializable> previousState) {
+		return null;
+	}
+
+	@Override
+	public List<String> getDataItemTags(DataItem tag) {
+		// TODO Auto-generated method stub
 		return null;
 	}
 

@@ -117,7 +117,7 @@ public class ExplorationStage {
 	    	Long confNumber=1L;
 	    	
 	    	Evaluation evalExploration = new Evaluation();
-	    	evalExploration.setExplorationNumber(this.exploration.getExplorationNumber());
+	    	evalExploration.setExplorationNumber(new Long(this.exploration.getExplorationNumber()));
 	    	r.add(evalExploration);
 	    	
 	    	for (Long repeatNumber=1L; repeatNumber<=nbRepeats; repeatNumber++) {

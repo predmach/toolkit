@@ -3,6 +3,8 @@ package pilot.modules.containers;
 import java.util.ArrayList;
 import java.util.List;
 
+import bigs.api.core.BIGSParam;
+
 import pilot.core.DataItem;
 import pilot.core.Task;
 import pilot.core.TaskContainer;
@@ -10,9 +12,11 @@ import pilot.core.TextSerializable;
 
 public class DataPartitionTaskContainer extends TaskContainer {
 
+	@BIGSParam
 	public Integer numberOfPartitions = 1;
 	
-	Integer partitionNumber = null;
+	@BIGSParam
+	public Integer partitionNumber = null;
 	
 	public DataPartitionTaskContainer() {		
 	}
@@ -59,13 +63,14 @@ public class DataPartitionTaskContainer extends TaskContainer {
 
 	@Override
 	public List<Class<? extends Task>> allowedTasks() {
-		// TODO Auto-generated method stub
-		return null;
+		 List<Class<? extends Task>> r = new  ArrayList<Class<? extends Task>>();
+		 r.add(DataPartitionTask.class);
+		 return r;
 	}
 
 	@Override
 	public Boolean supportsParallelization() {
-		return true;
+		return false;
 	}
 
 	@Override
@@ -98,6 +103,12 @@ public class DataPartitionTaskContainer extends TaskContainer {
 
 	@Override
 	public TextSerializable processPostLoop(List<TextSerializable> previousState) {
+		return null;
+	}
+
+	@Override
+	public List<String> getDataItemTags(DataItem tag) {
+		// TODO Auto-generated method stub
 		return null;
 	}
 	

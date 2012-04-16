@@ -131,9 +131,9 @@ public class HBaseTableWrapper implements Table {
 	}
 	
 	@Override
-	public long incrementColumnValue(String row, String columnFamily, String columnName, long amount) {
+	public Integer incrementColumnValue(String row, String columnFamily, String columnName, long amount) {
 		try {
-			return hbaseTable.incrementColumnValue(Bytes.toBytes(row),Bytes.toBytes(columnFamily), Bytes.toBytes(columnName), amount);
+			return new Long(hbaseTable.incrementColumnValue(Bytes.toBytes(row),Bytes.toBytes(columnFamily), Bytes.toBytes(columnName), amount)).intValue();
 		} catch (IOException e) {
 			throw new BIGSException("io exception when incrementing value "+e.getMessage());
 		}

@@ -150,15 +150,15 @@ public class Text {
     
     /**
      * collates the strings in the input array using the specified separator
-     * @param strings
+     * @param objects
      * @param separator
      * @return
      */
-    public static String collate(String[] strings, String separator) {
+    public static String collate(Object[] objects, String separator) {
     	StringBuffer sb = new StringBuffer();
-    	for (int i=0; i<strings.length; i++) {
-    		sb.append(strings[i]);
-    		if (i!=strings.length) {
+    	for (int i=0; i<objects.length; i++) {
+    		sb.append(objects[i].toString());
+    		if (i!=objects.length) {
     			sb.append(separator);
     		}
     	}
@@ -167,12 +167,12 @@ public class Text {
     
     /**
      * same as before, accepting a list of strings as arguments
-     * @param strings
+     * @param objects
      * @param separator
      * @return
      */
-    public static String collate(List<String> strings, String separator) {
-    	return collate(strings.toArray(new String[]{}), separator);
+    public static String collate(List<Object> objects, String separator) {
+    	return collate(objects.toArray(new String[]{}), separator);
     }
     
     /**

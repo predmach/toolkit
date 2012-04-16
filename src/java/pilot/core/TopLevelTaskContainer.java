@@ -73,4 +73,10 @@ public class TopLevelTaskContainer extends TaskContainer {
 		return "TopLevelTaskContainer []";
 	}
 
+	@Override
+	public List<String> getDataItemTags(DataItem tag) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

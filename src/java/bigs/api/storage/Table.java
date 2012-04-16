@@ -82,6 +82,6 @@ public interface Table {
 	 * @param amount
 	 * @return
 	 */
-	public long incrementColumnValue(String row, String columnFamily, String columnName, long amount);
+	public Integer incrementColumnValue(String row, String columnFamily, String columnName, long amount);
 	
 }

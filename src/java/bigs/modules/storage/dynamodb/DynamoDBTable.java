@@ -200,7 +200,7 @@ public class DynamoDBTable implements Table {
 	}
 
 	@Override
-	public long incrementColumnValue(String row, String columnFamily,
+	public Integer incrementColumnValue(String row, String columnFamily,
 			String columnName, long amount) {
 		
 		String fullColumnName = columnFamily + ":" + columnName;
@@ -223,7 +223,7 @@ public class DynamoDBTable implements Table {
 
 		// and returns the resulting value
 		AttributeValue val = result.getAttributes().get(fullColumnName);
-		Long newValue = new Long(val.getN());
+		Integer newValue = new Integer(val.getN());
 		return newValue;
 	}
 

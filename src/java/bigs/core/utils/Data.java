@@ -17,6 +17,8 @@ import net.sf.jmimemagic.Magic;
 
 import org.apache.hadoop.hbase.util.Bytes;
 
+import pilot.core.ScheduleItem;
+
 import bigs.api.exceptions.BIGSException;
 import bigs.api.storage.DataSource;
 import bigs.api.storage.Get;
@@ -43,7 +45,7 @@ public class Data {
 	static public void initBIGSTables(DataSource dataSource) {
 				
 		Data.createTableIfDoesNotExist(dataSource, BIGS.tableName, BIGS.columnFamilies);
-		Data.createTableIfDoesNotExist(dataSource, Evaluation.tableName, Evaluation.columnFamilies);
+		Data.createTableIfDoesNotExist(dataSource, ScheduleItem.tableName, ScheduleItem.columnFamilies);
 		Data.createTableIfDoesNotExist(dataSource, Exploration.tableName, Exploration.columnFamilies);		
 	}
 	

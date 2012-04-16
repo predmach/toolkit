@@ -82,12 +82,16 @@ public class Test extends Command {
     	
     	Exploration expl = new Exploration();
     	expl.load(new FileReader(new File(args[0])));
+    	expl.save();
     	
     	PipelineStage p = expl.getStages().get(0);
+    	
     	p.printOut();
 System.out.println();    	
 System.out.println();    	
     	Schedule schedule = p.generateSchedule();
+    	
+     	schedule.save();
 System.out.println();    	
 System.out.println();    	
 		for (ScheduleItem si: schedule.getItems()) {
@@ -100,7 +104,6 @@ System.out.println();
 			}
 
 			String prefix = "";
-//			for (int i=0; i<si.getLevel();i++) prefix = prefix + "   ";
 			System.out.println(Text.zeroPad(new Long(si.getId()),3)+" "
 		                      +prefix+  " ("+parents+") " +si.toString());
 		}

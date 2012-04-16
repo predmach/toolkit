@@ -28,6 +28,8 @@ public abstract class TaskContainer implements Configurable {
 	public abstract List<TaskContainer> generateMyTaskContainers();	
 	
 	public abstract Boolean supportsParallelization();
+	
+	public abstract List<String> getDataItemTags(DataItem tag);
 
 	
 	public abstract TextSerializable processPreSubContainers(TextSerializable previousState);

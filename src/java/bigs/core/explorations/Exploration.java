@@ -53,7 +53,7 @@ public class Exploration extends Properties {
 																"  ACTIVE ", 
 																"   DONE  "};
 
-	Long explorationNumber = 0L;
+	Integer explorationNumber = 0;
 	Integer status = STATUS_NEW;
 	
 	Date timeStart = null;
@@ -62,7 +62,7 @@ public class Exploration extends Properties {
 	
 	List<PipelineStage> declaredStages = new ArrayList<PipelineStage>();
 
-	public Long getExplorationNumber() {
+	public Integer getExplorationNumber() {
 		return explorationNumber;
 	}
 	
@@ -171,7 +171,7 @@ public class Exploration extends Properties {
 	}
 	
 	public void cleanExplorationNumber() {
-		this.explorationNumber = 0L;
+		this.explorationNumber = 0;
 	}
 	
 	/**
@@ -222,7 +222,7 @@ public class Exploration extends Properties {
 			r.setTimeDoneFromString(new String(tdone));
 		}
 		r.load(new StringReader(stringProperties));
-		r.explorationNumber = new Long(source.getRowKey());
+		r.explorationNumber = new Integer(source.getRowKey());
 		return r;
 	}
 	
@@ -303,7 +303,7 @@ public class Exploration extends Properties {
 		if (explorationNumber==null || explorationNumber==0) {
     		explorationNumber = this.getNextFreeExporationNumber();
     	}
-		Put put = table.createPutObject(Text.zeroPad(explorationNumber));
+		Put put = table.createPutObject(Text.zeroPad(new Long(explorationNumber)));
     	put.add("bigs", "uuid", Bytes.toBytes(Core.myUUID));
     	put.add("spec", "properties", Bytes.toBytes(this.getPropertiesAsString()));
     	put.add("bigs", "status", Bytes.toBytes(this.getStatusAsString().trim()));
@@ -322,7 +322,7 @@ public class Exploration extends Properties {
     
     public String toString() {
     	StringBuffer sb = new StringBuffer();
-    	sb.append("[").append(Text.zeroPad(this.explorationNumber)).append("] [").append(this.getStatusAsString()).append("]");
+    	sb.append("[").append(Text.zeroPad(new Long(this.explorationNumber))).append("] [").append(this.getStatusAsString()).append("]");
     	return sb.toString();
     }
     
@@ -330,7 +330,7 @@ public class Exploration extends Properties {
      * returns the greatest + 1 value for a rowkey in the explorations table
      * @return
      */
-    Long getNextFreeExporationNumber() {
+    Integer getNextFreeExporationNumber() {
     	
     	DataSource d = BIGS.globalProperties.getConfiguredDataSource();
 		Table table = d.getTable(BIGS.tableName);
@@ -373,8 +373,8 @@ public class Exploration extends Properties {
 		List<Evaluation> r = new ArrayList<Evaluation> ();
 		Table table = dataSource.getTable(Evaluation.tableName);
 		Scan scan = table.createScanObject();
-		scan.setStartRow(Text.zeroPad(this.explorationNumber));
-		scan.setStopRow(Text.zeroPad(this.explorationNumber+1));
+		scan.setStartRow(Text.zeroPad(new Long(this.explorationNumber)));
+		scan.setStopRow(Text.zeroPad(new Long(this.explorationNumber+1)));
 		for (String family: Evaluation.columnFamilies) {
 			scan.addFamily(family);
 		}
