@@ -4,6 +4,8 @@ import java.util.List;
 
 public class TopLevelTaskContainer extends TaskContainer {
 
+	public TopLevelTaskContainer(){}
+	
 	public TopLevelTaskContainer(PipelineStage pipelineStage) {
 		this.setPipelineStage(pipelineStage);
 	}
@@ -77,6 +79,15 @@ public class TopLevelTaskContainer extends TaskContainer {
 	public List<String> getDataItemTags(DataItem tag) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public String toTextRepresentation() {
+		return "";
+	}
+
+	@Override
+	public void fromTextRepresentation(String textRepresentation) {
 	}
 
 }

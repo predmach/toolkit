@@ -1,9 +1,18 @@
 package pilot.modules.ml;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 import bigs.api.core.BIGSParam;
+import bigs.api.exceptions.BIGSException;
 import pilot.core.DataItem;
 import pilot.core.TaskContainer;
 import pilot.core.TextSerializable;
@@ -40,16 +49,30 @@ public class KMeans implements DataPartitionTask {
 		
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public String toTextRepresentation() {
-		// TODO Auto-generated method stub
-		return null;
+		JSONObject obj = new JSONObject();
+		obj.put("centroids", this.numberOfCentroids);
+		obj.put("iterations", this.numberOfIterations);
+		obj.put("partitions", this.numberOfPartitions);
+		return obj.toString();
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public TextSerializable fromTextRepresentation(String textRepresentation) {
-		// TODO Auto-generated method stub
-		return null;
+	public void fromTextRepresentation(String textRepresentation) {
+		
+		JSONParser parser = new JSONParser();
+		try {
+			Map<String, Long> json = (Map<String, Long>)parser.parse(textRepresentation);
+			if (json.get("centroids")!=null) this.numberOfCentroids = json.get("centroids").intValue();
+			if (json.get("iterations")!=null) this.numberOfIterations = json.get("iterations").intValue();
+			if (json.get("partitions")!=null) this.numberOfPartitions = json.get("partitions").intValue();
+			
+		} catch (ParseException e) {
+			throw new BIGSException("error parsing JSON representation of "+this.getClass().getName());
+		}
 	}
 
 	@Override

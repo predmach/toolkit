@@ -55,7 +55,7 @@ public class Evaluation {
 																" PENDING  ", 
 																"INPROGRESS", 
 																"   DONE   " };
-	Exploration parentExploration = null;
+	Pipeline parentExploration = null;
 	
 	Algorithm configuredAlgorithm = null;
 
@@ -212,11 +212,11 @@ public class Evaluation {
 		return STATUS_STRINGS[status];
 	}
 	
-	public Exploration getParentExploration() {
+	public Pipeline getParentExploration() {
 		return this.parentExploration;
 	}
 	
-	public void setParentExploration(Exploration parentExploration ) {
+	public void setParentExploration(Pipeline parentExploration ) {
 		this.parentExploration = parentExploration;
 	}
 	

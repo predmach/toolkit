@@ -13,6 +13,7 @@ import java.util.Properties;
 import pilot.core.PipelineStage;
 import pilot.core.Schedule;
 import pilot.core.ScheduleItem;
+import pilot.modules.ml.KMeans;
 
 import bigs.api.core.Algorithm;
 import bigs.api.exceptions.BIGSException;
@@ -25,7 +26,7 @@ import bigs.api.storage.Scan;
 import bigs.api.storage.Table;
 import bigs.core.BIGS;
 import bigs.core.explorations.Evaluation;
-import bigs.core.explorations.Exploration;
+import bigs.core.explorations.Pipeline;
 import bigs.core.explorations.ExplorationStage;
 import bigs.core.utils.Log;
 import bigs.core.utils.Text;
@@ -72,19 +73,32 @@ public class Test extends Command {
 
     @Override
 	public void run(String[] args) throws Exception {
+    	//this.testTextSerializable(args);
     	testPipelineProperties(args);
     }
     
+    void testTextSerializable(String[] args) {
+    	KMeans k = new KMeans();
+    	k.numberOfCentroids = 3;
+    	k.numberOfIterations = 4;
+    	k.numberOfPartitions = 5;
+    	
+    	System.out.println(k.toTextRepresentation());
+    	
+    	KMeans k2 = new KMeans();
+    	k2.fromTextRepresentation(k.toTextRepresentation());
+    	System.out.println(k2.toTextRepresentation());
+    }
     
     void testPipelineProperties(String[] args) throws Exception {
     	Properties props = new Properties();
     	props.load(new FileReader(new File(args[0])));
     	
-    	Exploration expl = new Exploration();
-    	expl.load(new FileReader(new File(args[0])));
-    	expl.save();
+    	Pipeline pipeline = new Pipeline();
+    	pipeline.load(new FileReader(new File(args[0])));
+    	pipeline.save();
     	
-    	PipelineStage p = expl.getStages().get(0);
+    	PipelineStage p = pipeline.getStages().get(0);
     	
     	p.printOut();
 System.out.println();    	
@@ -108,6 +122,27 @@ System.out.println();
 		                      +prefix+  " ("+parents+") " +si.toString());
 		}
     	
+System.out.println();    	
+System.out.println("------- LOADING FROM STORAGE -------");    	
+System.out.println();    	
+		
+		Pipeline p2 = Pipeline.fromPipelineNumber(pipeline.getPipelineNumber());
+		PipelineStage p2s = p2.getStages().get(0);
+		Schedule p2ss = p2s.loadSchedule();
+		
+		for (ScheduleItem si: p2ss.getItems()) {
+			String parents = "";
+			for (Integer pi: si.getParentsIds()) {
+				parents = parents + pi ;
+				if (pi!=si.getParentsIds().get(si.getParentsIds().size()-1)) {
+					parents = parents + " ";
+				}
+			}
+
+			String prefix = "";
+			System.out.println(Text.zeroPad(new Long(si.getId()),3)+" "
+		                      +prefix+  " ("+parents+") " +si.toString());
+		}
     }
 
     
@@ -213,7 +248,7 @@ System.out.println();
     void testExplorations(String[] args) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
     	DataSource d = BIGS.globalProperties.getConfiguredDataSource();
     	
-    	Table table = d.getTable(Exploration.tableName);
+    	Table table = d.getTable(Pipeline.tableName);
     	Scan scan  = table.createScanObject();    	
     	scan.setStartRow("00002");
     	scan.setStopRow("00007");
@@ -221,8 +256,8 @@ System.out.println();
     	ResultScanner rs = table.getScan(scan);
     	Result r = null;
     	while ( (r=rs.next())!=null) {
-    		Exploration ex = Exploration.fromResultObject(r);
-    		System.out.println("retrieved exploration "+ex.getExplorationNumber()+" "+ex.getStatusAsString());
+    		Pipeline ex = Pipeline.fromResultObject(r);
+    		System.out.println("retrieved exploration "+ex.getPipelineNumber()+" "+ex.getStatusAsString());
     	}
     	
     }

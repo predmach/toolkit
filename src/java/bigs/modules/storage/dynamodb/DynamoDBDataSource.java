@@ -13,7 +13,7 @@ import bigs.api.storage.DataSource;
 import bigs.api.storage.Table;
 import bigs.core.BIGS;
 import bigs.core.exceptions.BIGSTableExistsException;
-import bigs.core.explorations.Exploration;
+import bigs.core.explorations.Pipeline;
 import bigs.core.utils.Log;
 
 import com.amazonaws.AmazonServiceException;
@@ -153,7 +153,7 @@ public class DynamoDBDataSource implements DataSource {
 
 			Long myReadCapacity = this.readCapacity;
 			Long myWriteCapacity = this.writeCapacity;
-			if (tableName.equals(BIGS.tableName) || tableName.equals(Exploration.tableName)) {
+			if (tableName.equals(BIGS.tableName) || tableName.equals(Pipeline.tableName)) {
 				myReadCapacity = 10L;
 				myWriteCapacity = 10L;
 			}

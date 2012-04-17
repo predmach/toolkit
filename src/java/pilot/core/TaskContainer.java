@@ -13,7 +13,7 @@ import bigs.core.utils.Core;
 import bigs.core.utils.Log;
 import bigs.core.utils.Text;
 
-public abstract class TaskContainer implements Configurable {
+public abstract class TaskContainer implements Configurable, TextSerializable {
 
 	List<TaskContainer> taskContainers = new ArrayList<TaskContainer>();
 

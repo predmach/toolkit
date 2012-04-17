@@ -24,17 +24,15 @@ import bigs.core.utils.Text;
 public class ScheduleItem {
 	
 	public final static String tableName = "schedules";
-	public final static String[] columnFamilies = new String[]{ "task", "taskcontainer", "bigs" };	
+	public final static String[] columnFamilies = new String[]{ "scheduling", "bigs" };	
 	
 	
-	public static Integer NONE        = 0;
-	public static Integer SCHEDULED   = 1;
-	public static Integer IN_PROGRESS = 2;
-	public static Integer DONE        = 3;
-	public static Integer FAILED      = 4;
+	public static Integer STATUS_PENDING     = 0;
+	public static Integer STATUS_INPROGRESS  = 1;
+	public static Integer STATUS_DONE        = 2;
+	public static Integer STATUS_FAILED      = 3;
 	
-	static String[] statusStrings = new String[]{ "  NONE    ",
-		                                          "SCHEDULED ",
+	static String[] statusStrings = new String[]{ " PENDING  ",
 		                                          "INPROGRESS",
 		                                          "   DONE   ",
 		                                          "  FAILED  " };
@@ -53,7 +51,9 @@ public class ScheduleItem {
 	Task configuredTask;
 	TaskContainer configuredTaskContainer;
 	
-	Integer status = ScheduleItem.NONE;
+	Integer status = ScheduleItem.STATUS_PENDING;
+	
+	public ScheduleItem() {}
 	
 	public ScheduleItem(Schedule schedule) {
 		this.schedule = schedule;
@@ -75,6 +75,10 @@ public class ScheduleItem {
 		this.id = id;
 	}
 	
+	public Schedule getSchedule() {
+		return schedule;
+	}
+	
 	public String getMethodName() {
 		return this.methodName;
 	}
@@ -83,44 +87,36 @@ public class ScheduleItem {
 		this.methodName = methodName;
 	}
 	
-	public Boolean isStatusNone() {
-		return status == ScheduleItem.NONE;
-	}
-	
-	public Boolean isStatusScheduled() {
-		return status == ScheduleItem.SCHEDULED;
+	public Boolean isStatusPending() {
+		return status == ScheduleItem.STATUS_PENDING;
 	}
 	
 	public Boolean isStatusInProgress() {
-		return status == ScheduleItem.IN_PROGRESS;
+		return status == ScheduleItem.STATUS_INPROGRESS;
 	}
 	
 	public Boolean isStatusDone() {
-		return status == ScheduleItem.DONE;
+		return status == ScheduleItem.STATUS_DONE;
 	}
 	
 	public Boolean isStatusFailed() {
-		return status == ScheduleItem.FAILED;				
+		return status == ScheduleItem.STATUS_FAILED;				
 	}
 	
-	public void setStatusNone() {
-		status = ScheduleItem.NONE;
-	}
-	
-	public void setStatusScheduled() {
-		status = ScheduleItem.SCHEDULED;
+	public void setStatusPending() {
+		status = ScheduleItem.STATUS_PENDING;
 	}
 
 	public void setStatusInProgress() {
-		status = ScheduleItem.IN_PROGRESS;
+		status = ScheduleItem.STATUS_INPROGRESS;
 	}
 	
 	public void setStatusDone() {
-		status = ScheduleItem.DONE;
+		status = ScheduleItem.STATUS_DONE;
 	}
 
 	public void setStatusFailed() {
-		status = ScheduleItem.FAILED;
+		status = ScheduleItem.STATUS_FAILED;
 	}
 
 	public Integer getStatus() {
@@ -191,9 +187,10 @@ public class ScheduleItem {
 		for (int i=0; i<ScheduleItem.statusStrings.length; i++) {
 			if (statusString.trim().equals(ScheduleItem.statusStrings[i].trim())) {
 				this.status = i;
+				return;
 			}
 		}
-		throw new BIGSException("status "+statusString+" not recognized for a schedule item");
+		throw new BIGSException("status "+statusString.trim()+" not recognized for a schedule item");
 	}
 
 	public ScheduleItem addParentId(Integer parentId) {
@@ -217,7 +214,7 @@ public class ScheduleItem {
 	 * @return
 	 */
 	public String getRowKey() {
-		String explorationNumber = Text.zeroPad(new Long(this.schedule.pipelineStage.exploration.getExplorationNumber()), 5);
+		String explorationNumber = Text.zeroPad(new Long(this.schedule.pipelineStage.pipeline.getPipelineNumber()), 5);
 		String stageNumber = Text.zeroPad(new Long(this.schedule.pipelineStage.getStageNumber()),5);
 		String scheduleItemNumber = Text.zeroPad(new Long(this.id), 5);	
 		return explorationNumber + "." + stageNumber + "." + scheduleItemNumber;
@@ -236,13 +233,12 @@ public class ScheduleItem {
 		if (s.length!=3) {
 			throw new BIGSException("incorrect schedule item rowkey specification");
 		}
-		Integer explorationNumber = new Integer(s[0]);
+		Integer pipelineNumber = new Integer(s[0]);
 		Integer stageNumber = new Integer(s[1]);
 		Integer scheduleItemNumber = new Integer(s[2]);
-		
-		if (schedule.pipelineStage.stageNumber!=stageNumber ||
-			schedule.pipelineStage.exploration.getExplorationNumber()!=explorationNumber) {
-			throw new BIGSException("error reconstructing schedule item rowkey "+k+" does not correspond to exploration number "+explorationNumber+" and stage "+stageNumber);			
+		if (!schedule.pipelineStage.stageNumber.equals(stageNumber) ||
+			!schedule.pipelineStage.pipeline.getPipelineNumber().equals(pipelineNumber)) {
+			throw new BIGSException("error reconstructing schedule item rowkey "+k+" does not correspond to exploration "+pipelineNumber+" / stage "+stageNumber);			
 		}
 		
 		ScheduleItem r = new ScheduleItem(schedule);
@@ -280,7 +276,7 @@ public class ScheduleItem {
 			r.setUuidStored(new String(suuid));
 		}
 
-		byte[] smethod = result.getValue("bigs", "method");
+		byte[] smethod = result.getValue("scheduling", "method");
 		if (smethod!=null) {
 			r.setMethodName(new String(smethod));
 		}
@@ -290,22 +286,48 @@ public class ScheduleItem {
 			r.setHostnameStored(new String(shostname));
 		}
 				
-		String parentsIdsString = new String(result.getValue("bigs", "parents"));
+		String parentsIdsString = new String(result.getValue("scheduling", "parents"));
 		
-		r.parentsIds = Text.parseObjectList(parentsIdsString, " ", Integer.class);
+		if (parentsIdsString!=null && !parentsIdsString.trim().isEmpty()) {
+			r.parentsIds = Text.parseObjectList(parentsIdsString, " ", Integer.class);
+		}
 		
-		byte[] taskClassNameBytes = result.getValue("task", "class");
+		byte[] taskClassNameBytes = result.getValue("scheduling", "task.class");
 		if (taskClassNameBytes!=null) {
-			Map<String, String> fieldValues = result.getFamilyMap("task");		
-			Task configuredTask = Core.getConfiguredObject(new String(taskClassNameBytes), Task.class, fieldValues);
-			r.configuredTask = configuredTask;
+			Object obj = null;
+			try {
+				obj = Class.forName(new String(taskClassNameBytes)).newInstance();
+			} catch (Exception e) {
+				throw new BIGSException("error getting task in schedule item "+result.getRowKey()+". "+e.getMessage());
+			}
+			if (! (obj instanceof Task)) {
+				throw new BIGSException("task schedule item in db with rowkey '"+result.getRowKey()+"' must instantiate "+Task.class.getName());
+			}
+			
+			r.configuredTask = (Task)obj;
+			byte[] taskObject = result.getValue("scheduling", "task.object");
+			if (taskObject!=null) {
+				r.configuredTask.fromTextRepresentation(new String(taskObject));
+			}
 		}		
 
-		byte[] taskContainerClassNameBytes = result.getValue("taskcontainer", "class");
-		if (taskClassNameBytes!=null) {
-			Map<String, String> fieldValues = result.getFamilyMap("taskcontainer");		
-			TaskContainer configuredTaskContainer = Core.getConfiguredObject(new String(taskContainerClassNameBytes), TaskContainer.class, fieldValues);
-			r.configuredTaskContainer = configuredTaskContainer;
+		byte[] taskContainerClassNameBytes = result.getValue("scheduling", "task.container.class");
+		if (taskContainerClassNameBytes!=null) {
+			Object obj = null;
+			try {
+				obj = Class.forName(new String(taskContainerClassNameBytes)).newInstance();
+			} catch (Exception e) {
+				throw new BIGSException("error getting task conatiner in schedule item "+result.getRowKey()+". "+e.getMessage());
+			}
+			if (! (obj instanceof TaskContainer)) {
+				throw new BIGSException("task container schedule item in db with rowkey '"+result.getRowKey()+"' must instantiate "+TaskContainer.class.getName());
+			}
+			
+			r.configuredTaskContainer = (TaskContainer)obj;
+			byte[] taskContainerObject = result.getValue("scheduling", "task.container.object");
+			if (taskContainerObject!=null) {
+				r.configuredTaskContainer.fromTextRepresentation(new String(taskContainerObject));
+			}
 		}		
 		return r;
 	}
@@ -318,26 +340,20 @@ public class ScheduleItem {
 	public Put fillPutObject (Put put) {		
 
 		if (this.configuredTask!=null) {
-			Map<String, String> params = Core.getObjectAnnotatedFieldsAsString(configuredTask, BIGSParam.class);
-			put.add("task", "class", Bytes.toBytes(configuredTask.getClass().getName()));
-			for (String key: params.keySet()) {
-				put.add("task", key, Bytes.toBytes(params.get(key)));
-			}		
+			put.add("scheduling", "task.class", this.configuredTask.getClass().getName());
+			put.add("scheduling", "task.object", this.configuredTask.toTextRepresentation());			
 		}
 		
 		if (this.configuredTaskContainer!=null) {
-			Map<String, String> params = Core.getObjectAnnotatedFieldsAsString(configuredTaskContainer, BIGSParam.class);
-			put.add("taskcontainer", "class", Bytes.toBytes(configuredTaskContainer.getClass().getName()));
-			for (String key: params.keySet()) {
-				put.add("taskcontainer", key, Bytes.toBytes(params.get(key)));
-			}		
+			put.add("scheduling", "task.container.class", this.configuredTaskContainer.getClass().getName());
+			put.add("scheduling", "task.container.object", this.configuredTaskContainer.toTextRepresentation());			
 		}
 
 		put.add("bigs","status", Bytes.toBytes(this.getStatusAsString()));
 		
-		put.add("bigs", "parents", Bytes.toBytes(Text.collate(this.parentsIds.toArray(), " ")));
+		put.add("scheduling", "parents", Bytes.toBytes(Text.collate(this.parentsIds.toArray(), " ")));
 		
-		put.add("bigs", "method", Bytes.toBytes(this.getMethodName()));
+		put.add("scheduling", "method", Bytes.toBytes(this.getMethodName()));
 		
 		lastUpdate = new Date(Core.getTime());
     	
@@ -364,6 +380,12 @@ public class ScheduleItem {
 		get.addColumn("bigs", "lastupdate");
 		get.addColumn("bigs", "hostname");
 		get.addColumn("bigs", "uuid");
+		get.addColumn("scheduling", "task.class");
+		get.addColumn("scheduling", "task.object");
+		get.addColumn("scheduling", "task.container.object");
+		get.addColumn("scheduling", "task.container.object");
+		get.addColumn("scheduling", "method");
+		get.addColumn("scheduling", "parents");
 		return get;
 	}	
 
@@ -387,7 +409,6 @@ public class ScheduleItem {
 	 * @param dataSource the datasource
 	 */
 	public void save() {
-System.out.println("saving --> "+this.toString());		
     	DataSource dataSource = BIGS.globalProperties.getConfiguredDataSource();
     	Table table = dataSource.getTable(ScheduleItem.tableName);
     	table.put(Data.fillInHostMetadata(this.fillPutObject(table.createPutObject(this.getRowKey()))));				
@@ -436,13 +457,37 @@ System.out.println("saving --> "+this.toString());
 	
 	public Boolean equals(ScheduleItem si) {
 		if (!bothNullOrEqual(this.schedule.pipelineStage.stageNumber, si.schedule.pipelineStage.stageNumber)) return false;
-		if (!bothNullOrEqual(this.schedule.pipelineStage.exploration.getExplorationNumber(), si.schedule.pipelineStage.exploration.getExplorationNumber())) return false;
+		if (!bothNullOrEqual(this.schedule.pipelineStage.pipeline.getPipelineNumber(), si.schedule.pipelineStage.pipeline.getPipelineNumber())) return false;
 
 		if (!bothNullOrEqual(this.status, si.status)) return false;
 		if (!bothNullOrEqual(this.elapsedTime, si.elapsedTime)) return false;
 		
 		return true;
 	}		
+	
+	/**
+	 * Checks if the schedule item is available to start working on it.
+	 * Returns true if all the schedule item parents are done
+	 */
+	public boolean canProcess() {
+		if (this.isStatusPending()) {
+			Boolean anyParentNotFinished = false;
+			for (Integer parentId: this.getParentsIds()) {
+				ScheduleItem parent = this.getSchedule().get(parentId);
+				if (parent==null) {
+					throw new BIGSException("parent for schedule item "+this.getRowKey()+" not found");
+				}
+				if (!parent.isStatusDone()) {
+					anyParentNotFinished = true;
+					break;
+				}
+			}
+			
+			return !anyParentNotFinished;		
+		}
+		return false;
+	}
+		
 	
 	public String toString() {
 		String r = this.getRowKey()+" "+configuredTaskContainer.toString()+ " "+	configuredTask.toString() + " " + methodName;

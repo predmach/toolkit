@@ -20,13 +20,13 @@ public class ExplorationStage {
 	static String lnumberOfSplits = "nbsplits";
 	static String lsourceTable    = "sourcetable";
 	
-	Exploration exploration;
+	Pipeline exploration;
 	String stage = "";
 	String prefix = "";
 	
 	Integer numberOfSplits = 1;
 		
-	public ExplorationStage(Exploration exploration, String stage) {
+	public ExplorationStage(Pipeline exploration, String stage) {
 		this.exploration = exploration;
 		this.stage = stage;
 		this.prefix = "stage."+stage;
@@ -117,7 +117,7 @@ public class ExplorationStage {
 	    	Long confNumber=1L;
 	    	
 	    	Evaluation evalExploration = new Evaluation();
-	    	evalExploration.setExplorationNumber(new Long(this.exploration.getExplorationNumber()));
+	    	evalExploration.setExplorationNumber(new Long(this.exploration.getPipelineNumber()));
 	    	r.add(evalExploration);
 	    	
 	    	for (Long repeatNumber=1L; repeatNumber<=nbRepeats; repeatNumber++) {

@@ -32,9 +32,7 @@ public class DataItem implements TextSerializable {
 	}
 
 	@Override
-	public TextSerializable fromTextRepresentation(String textRepresentation) {
-		// TODO Auto-generated method stub
-		return null;
+	public void fromTextRepresentation(String textRepresentation) {
 	}
 
 }

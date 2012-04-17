@@ -32,7 +32,7 @@ import bigs.api.utils.TextUtils;
 import bigs.core.BIGS;
 import bigs.core.exceptions.BIGSTableExistsException;
 import bigs.core.explorations.Evaluation;
-import bigs.core.explorations.Exploration;
+import bigs.core.explorations.Pipeline;
 
 
 public class Data {
@@ -46,7 +46,7 @@ public class Data {
 				
 		Data.createTableIfDoesNotExist(dataSource, BIGS.tableName, BIGS.columnFamilies);
 		Data.createTableIfDoesNotExist(dataSource, ScheduleItem.tableName, ScheduleItem.columnFamilies);
-		Data.createTableIfDoesNotExist(dataSource, Exploration.tableName, Exploration.columnFamilies);		
+		Data.createTableIfDoesNotExist(dataSource, Pipeline.tableName, Pipeline.columnFamilies);		
 	}
 	
 	

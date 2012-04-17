@@ -2,7 +2,7 @@ package bigs.core.commands;
 
 import java.util.Arrays;
 
-import bigs.core.explorations.Exploration;
+import bigs.core.explorations.Pipeline;
 import bigs.core.utils.Log;
 
 
@@ -15,9 +15,9 @@ public class ExplorationStatus  extends Command {
 
 	@Override
 	public String[] getHelpString() {
-		String[] allowed = new String[Exploration.STATUS_STRINGS.length-1];
-		for (int i=0; i<Exploration.STATUS_STRINGS.length-1; i++) {
-			allowed[i] = Exploration.STATUS_STRINGS[i+1];
+		String[] allowed = new String[Pipeline.STATUS_STRINGS.length-1];
+		for (int i=0; i<Pipeline.STATUS_STRINGS.length-1; i++) {
+			allowed[i] = Pipeline.STATUS_STRINGS[i+1];
 		}
 		return new String[]{"'bigs "+this.getCommandName()+" status'","",
 				            " where status is one of "+Arrays.toString(allowed)};
@@ -30,8 +30,8 @@ public class ExplorationStatus  extends Command {
 
     @Override
 	public void run(String[] args) {
-    	Long explorationNumber = new Long(args[0]);
-    	Exploration expl = Exploration.fromExplorationNumber(explorationNumber);
+    	Integer explorationNumber = new Integer(args[0]);
+    	Pipeline expl = Pipeline.fromPipelineNumber(explorationNumber);
     	expl.setStatusFromString(args[1]);
     	if (expl.isStatusNone()) {
     		Log.error("status "+args[1]+" not valid");

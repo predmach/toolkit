@@ -41,9 +41,7 @@ public class SampleFeatureExtractor implements DataPartitionTask {
 	}
 
 	@Override
-	public TextSerializable fromTextRepresentation(String textRepresentation) {
-		// TODO Auto-generated method stub
-		return null;
+	public void fromTextRepresentation(String textRepresentation) {
 	}
 
 	@Override

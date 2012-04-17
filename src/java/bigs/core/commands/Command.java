@@ -12,9 +12,9 @@ public abstract class Command {
     final static Command[] availableCommands = new Command[]{
     	new LoadFiles(),
     	new DownloadFiles(),
-    	new ExplorationLoad(),
-    	new ExplorationPrepare(),
-    	new ExplorationInfo(),
+    	new PipelineLoad(),
+    	new PipelinePrepare(),
+    	new PipelineInfo(),
     	new ExplorationStatus(),
     	new StartWorker(),
     	new StartWeb(),

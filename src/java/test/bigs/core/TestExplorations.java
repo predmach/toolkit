@@ -13,7 +13,7 @@ import org.junit.Test;
 import bigs.api.storage.DataSource;
 import bigs.core.BIGS;
 import bigs.core.explorations.Evaluation;
-import bigs.core.explorations.Exploration;
+import bigs.core.explorations.Pipeline;
 import bigs.core.explorations.ExplorationStage;
 import bigs.core.utils.Core;
 import bigs.core.utils.Log;

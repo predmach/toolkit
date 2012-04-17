@@ -1,9 +1,9 @@
 package bigs.core.commands;
 
-import bigs.core.explorations.Exploration;
+import bigs.core.explorations.Pipeline;
 import bigs.core.utils.Log;
 
-public class ExplorationInfo extends Command {
+public class PipelineInfo extends Command {
 
 	@Override
 	public String getCommandName() {
@@ -17,9 +17,9 @@ public class ExplorationInfo extends Command {
 
 	@Override
 	public void run(String[] args) throws Exception {
-		Long explorationNumber = new Long(args[0]);
+		Integer explorationNumber = new Integer(args[0]);
 		
-		Exploration exploration = Exploration.fromExplorationNumber(explorationNumber);
+		Pipeline exploration = Pipeline.fromPipelineNumber(explorationNumber);
 		
 		Log.info("exploration: "+exploration.toString());
 		Log.info("");

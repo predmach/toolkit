@@ -5,7 +5,7 @@ import java.util.List;
 
 import bigs.api.exceptions.BIGSException;
 import bigs.core.exceptions.BIGSPropertyNotFoundException;
-import bigs.core.explorations.Exploration;
+import bigs.core.explorations.Pipeline;
 import bigs.core.utils.Core;
 import bigs.core.utils.Log;
 import bigs.core.utils.Text;
@@ -18,16 +18,24 @@ public class PipelineStage {
 	Integer stageNumber = 1;
 	TaskContainer topLevelContainer = new TopLevelTaskContainer(this);
 	Task configuredTask;
-	Exploration exploration;
+	Pipeline pipeline;
 
-	public PipelineStage (Exploration exploration, Integer stageNumber) {
+	public PipelineStage (Pipeline exploration, Integer stageNumber) {
 		this.stageNumber = stageNumber;
-		this.exploration = exploration;
+		this.pipeline = exploration;
+		String stagePrefix = lprefix+"."+Text.zeroPad(new Long(stageNumber), 2);
+		try {
+			this.configuredTask = Core.getConfiguredObject("task", Task.class, exploration, stagePrefix);
+		} catch (BIGSPropertyNotFoundException e) {
+			throw new BIGSException(e.getMessage());
+		}
 		
-		this.generateTaskContainerCascade();
 	}
 	
-
+	public Pipeline getPipeline() {
+		return this.pipeline;
+	}
+	
 	public Task getConfiguredTask() {
 		return configuredTask;
 	}
@@ -64,10 +72,7 @@ public class PipelineStage {
 	}
 	
 	void generateTaskContainerCascade() {
-		String stagePrefix = lprefix+"."+Text.zeroPad(new Long(stageNumber), 2);
 
-		try {
-			this.configuredTask = Core.getConfiguredObject("task", Task.class, exploration, stagePrefix);
 			this.topLevelContainer = new TopLevelTaskContainer(this);
 			List<TaskContainer> containers = this.generateTaskContainers(this.configuredTask.getTaskContainerCascade(),0);
 			for (TaskContainer c: containers) {
@@ -75,10 +80,6 @@ public class PipelineStage {
 			}
 			
 			return;
-		} catch (BIGSPropertyNotFoundException e) {
-			throw new BIGSException(e.getMessage());
-		}
-		
 	}
 	
 
@@ -92,7 +93,14 @@ public class PipelineStage {
 				+ "]";
 	}
 
+	/**
+	 * generates the schedule corresponding to this stage from the task
+	 * defined in the pipeline properties file
+	 * 
+	 * @return the schedule
+	 */
 	public Schedule generateSchedule() {
+		this.generateTaskContainerCascade();
 		Log.info("Stage "+this.stageNumber);
 		Log.info("configured task: "+this.configuredTask.toString());
 		Schedule schedule = new Schedule(this);
@@ -100,9 +108,20 @@ public class PipelineStage {
 		return schedule;
 	}
 	
+	/**
+	 * loads the schedule of this stage form the underlying storage
+	 * @return
+	 */
+	public Schedule loadSchedule() {
+		return Schedule.load(this);
+		
+	}
+	
+	
+	
 	public void printOut() {
 		Log.info("Stage "+this.stageNumber);
-		Log.info("configured task: "+this.configuredTask.toString());
+		if (this.configuredTask!=null) Log.info("configured task: "+this.configuredTask.toString());
 		this.topLevelContainer.printOut("   ");
 	}
 	

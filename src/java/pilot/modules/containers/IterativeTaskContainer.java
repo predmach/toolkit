@@ -2,8 +2,14 @@ package pilot.modules.containers;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 import bigs.api.core.BIGSParam;
+import bigs.api.exceptions.BIGSException;
 import pilot.core.DataItem;
 import pilot.core.Task;
 import pilot.core.TaskContainer;
@@ -105,6 +111,29 @@ public class IterativeTaskContainer extends TaskContainer {
 		return null;
 	}
 
+	@SuppressWarnings("unchecked")
+	@Override
+	public String toTextRepresentation() {
+		JSONObject obj = new JSONObject();
+		obj.put("iterations", this.numberOfIterations);
+		obj.put("iterationNumber", this.iterationNumber);
+		return obj.toString();
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public void fromTextRepresentation(String textRepresentation) {
+		
+		JSONParser parser = new JSONParser();
+		try {
+			Map<String, Long> json = (Map<String, Long>)parser.parse(textRepresentation);
+			if (json.get("iterations")!=null) this.numberOfIterations = json.get("iterations").intValue();
+			if (json.get("iterationNumber")!=null) this.iterationNumber = json.get("iterationNumber").intValue();
+			
+		} catch (ParseException e) {
+			throw new BIGSException("error parsing JSON representation of "+this.getClass().getName());
+		}
+	}
 	
 	
 	

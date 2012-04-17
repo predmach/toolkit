@@ -5,7 +5,7 @@ import bigs.api.storage.DataSource;
 import bigs.core.BIGS;
 import bigs.core.BIGSProperties;
 import bigs.core.explorations.Evaluation;
-import bigs.core.explorations.Exploration;
+import bigs.core.explorations.Pipeline;
 import bigs.core.utils.Data;
 import bigs.core.utils.Log;
 
@@ -26,10 +26,10 @@ public class Utils {
 	public static void initializeExplorationsTable() {
 		if (explorationsTableInitialized) return ;		
 		DataSource dataSource = BIGS.globalProperties.getConfiguredDataSource(BIGSProperties.DONOT_CREATE_TABLES);
-		if (dataSource.existsTable(Exploration.tableName)) {
-			throw new BIGSException("must delete table "+Exploration.tableName+" before starting tests");
+		if (dataSource.existsTable(Pipeline.tableName)) {
+			throw new BIGSException("must delete table "+Pipeline.tableName+" before starting tests");
 		}
-		Data.createTableIfDoesNotExist(dataSource, Exploration.tableName, Exploration.columnFamilies);
+		Data.createTableIfDoesNotExist(dataSource, Pipeline.tableName, Pipeline.columnFamilies);
 		explorationsTableInitialized = true;
 	}
 	

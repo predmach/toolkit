@@ -32,7 +32,7 @@ import bigs.core.utils.Core;
 import bigs.core.utils.Text;
 
 
-public class Exploration extends Properties {
+public class Pipeline extends Properties {
 	
 	private static final long serialVersionUID = 1L;
 	
@@ -53,7 +53,7 @@ public class Exploration extends Properties {
 																"  ACTIVE ", 
 																"   DONE  "};
 
-	Integer explorationNumber = 0;
+	Integer pipelineNumber = 0;
 	Integer status = STATUS_NEW;
 	
 	Date timeStart = null;
@@ -61,9 +61,9 @@ public class Exploration extends Properties {
 	
 	
 	List<PipelineStage> declaredStages = new ArrayList<PipelineStage>();
-
-	public Integer getExplorationNumber() {
-		return explorationNumber;
+	
+	public Integer getPipelineNumber() {
+		return pipelineNumber;
 	}
 	
 	public Date getTimeStart() {
@@ -162,7 +162,7 @@ public class Exploration extends Properties {
 		return STATUS_STRINGS[status];
 	}
 	/**
-	 * returns the stages declared in this exploration. 
+	 * returns the stages declared in this pipeline. 
 	 * Stages are parsed and created in the load method.
 	 * @return
 	 */
@@ -170,8 +170,8 @@ public class Exploration extends Properties {
 		return declaredStages;
 	}
 	
-	public void cleanExplorationNumber() {
-		this.explorationNumber = 0;
+	public void cleanPipelineNumber() {
+		this.pipelineNumber = 0;
 	}
 	
 	/**
@@ -206,11 +206,11 @@ public class Exploration extends Properties {
 	 * creates a new properties object from a Result object previously
 	 * retrieved from the underlying storage
 	 * 
-	 * @param source the Result object containing the exploration information
-	 * @return a new Exploration properties object
+	 * @param source the Result object containing the pipeline information
+	 * @return a new Pipeline object
 	 */
-	public static Exploration fromResultObject (Result source) {
-		Exploration r = new Exploration();
+	public static Pipeline fromResultObject (Result source) {
+		Pipeline r = new Pipeline();
 		String stringProperties = new String(source.getValue("spec", "properties"));
 		r.setStatusFromString(new String(source.getValue("bigs", "status")));
 		byte[] tstart = source.getValue("bigs", "timestart");
@@ -222,25 +222,25 @@ public class Exploration extends Properties {
 			r.setTimeDoneFromString(new String(tdone));
 		}
 		r.load(new StringReader(stringProperties));
-		r.explorationNumber = new Integer(source.getRowKey());
+		r.pipelineNumber = new Integer(source.getRowKey());
 		return r;
 	}
 	
 	/**
 	 * creates a new properties object by retrieving it as stored in the underlying db
-	 * @param explorationNumber the exploration number to retrieve
-	 * @return the retrieved exploration object
+	 * @param pipelineNumber the pipeline number to retrieve
+	 * @return the retrieved pipeline object
 	 */
-	public static Exploration fromExplorationNumber (Long explorationNumber) {
+	public static Pipeline fromPipelineNumber (Integer pipelineNumber) {
     	DataSource d = BIGS.globalProperties.getConfiguredDataSource();
-		Table table = d.getTable(Exploration.tableName);
+		Table table = d.getTable(Pipeline.tableName);
 
-		Get   get   = table.createGetObject(Text.zeroPad(explorationNumber));
+		Get   get   = table.createGetObject(Text.zeroPad(new Long(pipelineNumber)));
 		get.addColumn("spec", "properties");
 		get.addColumn("bigs", "status");
 		get.addColumn("bigs", "timestart");
 		get.addColumn("bigs", "timedone");
-		Exploration r = Exploration.fromResultObject(table.get(get));
+		Pipeline r = Pipeline.fromResultObject(table.get(get));
 		return r;
 	}
 	
@@ -294,16 +294,16 @@ public class Exploration extends Properties {
     }
     
     /**
-     * saves an exploration in the data source configured in the global properties
+     * saves a pipeline in the data source configured in the global properties
      */
     public void save() {
     	DataSource d = BIGS.globalProperties.getConfiguredDataSource();
-		Table table = d.getTable(Exploration.tableName);
+		Table table = d.getTable(Pipeline.tableName);
 
-		if (explorationNumber==null || explorationNumber==0) {
-    		explorationNumber = this.getNextFreeExporationNumber();
+		if (pipelineNumber==null || pipelineNumber==0) {
+    		pipelineNumber = this.getNextFreeExporationNumber();
     	}
-		Put put = table.createPutObject(Text.zeroPad(new Long(explorationNumber)));
+		Put put = table.createPutObject(Text.zeroPad(new Long(pipelineNumber)));
     	put.add("bigs", "uuid", Bytes.toBytes(Core.myUUID));
     	put.add("spec", "properties", Bytes.toBytes(this.getPropertiesAsString()));
     	put.add("bigs", "status", Bytes.toBytes(this.getStatusAsString().trim()));
@@ -322,34 +322,34 @@ public class Exploration extends Properties {
     
     public String toString() {
     	StringBuffer sb = new StringBuffer();
-    	sb.append("[").append(Text.zeroPad(new Long(this.explorationNumber))).append("] [").append(this.getStatusAsString()).append("]");
+    	sb.append("[").append(Text.zeroPad(new Long(this.pipelineNumber))).append("] [").append(this.getStatusAsString()).append("]");
     	return sb.toString();
     }
     
     /**
-     * returns the greatest + 1 value for a rowkey in the explorations table
+     * returns the greatest + 1 value for a rowkey in the pipelines table
      * @return
      */
     Integer getNextFreeExporationNumber() {
     	
     	DataSource d = BIGS.globalProperties.getConfiguredDataSource();
 		Table table = d.getTable(BIGS.tableName);
-		return table.incrementColumnValue("counters", "content", "exploration", 1);
+		return table.incrementColumnValue("counters", "content", "pipeline", 1);
     }    
     
-    public static List<Exploration> getExplorationsForStatus (Integer status ) {
+    public static List<Pipeline> getPipelinesForStatus (Integer status ) {
 		DataSource dataSource = BIGS.globalProperties.getConfiguredDataSource();
-		List<Exploration> r = new ArrayList<Exploration> ();
-		Table table = dataSource.getTable(Exploration.tableName);
+		List<Pipeline> r = new ArrayList<Pipeline> ();
+		Table table = dataSource.getTable(Pipeline.tableName);
 		Scan scan = table.createScanObject();
-		for (String family: Exploration.columnFamilies) {
+		for (String family: Pipeline.columnFamilies) {
 			scan.addFamily(family);
 		}
 		scan.setFilterByColumnValue("bigs", "status", Bytes.toBytes(STATUS_STRINGS[status].trim()));
 		ResultScanner rs = table.getScan(scan);
 		try {
 			for (Result rr = rs.next(); rr!=null; rr = rs.next()) {					
-				Exploration ev = Exploration.fromResultObject(rr);
+				Pipeline ev = Pipeline.fromResultObject(rr);
 				r.add(ev);
 			}
 		} finally {
@@ -362,10 +362,10 @@ public class Exploration extends Properties {
 	
     List<Evaluation> cachedEvaluations = null;
 	/**
-	 * Retrieves from the underlying storage all evaluations corresponding to this exploration.
+	 * Retrieves from the underlying storage all evaluations corresponding to this pipeline.
 	 * Caches the result unless specified in the arguments
 	 * @param useCache if false will always get the evals from the DB
-	 * @return the list of evaluations of this exploration
+	 * @return the list of evaluations of this pipeline
 	 */
 	public List<Evaluation> getAllEvaluations (Boolean useCache) {
 		if (cachedEvaluations!=null && useCache) return cachedEvaluations;
@@ -373,8 +373,8 @@ public class Exploration extends Properties {
 		List<Evaluation> r = new ArrayList<Evaluation> ();
 		Table table = dataSource.getTable(Evaluation.tableName);
 		Scan scan = table.createScanObject();
-		scan.setStartRow(Text.zeroPad(new Long(this.explorationNumber)));
-		scan.setStopRow(Text.zeroPad(new Long(this.explorationNumber+1)));
+		scan.setStartRow(Text.zeroPad(new Long(this.pipelineNumber)));
+		scan.setStopRow(Text.zeroPad(new Long(this.pipelineNumber+1)));
 		for (String family: Evaluation.columnFamilies) {
 			scan.addFamily(family);
 		}
@@ -467,7 +467,7 @@ public class Exploration extends Properties {
 		sb.append("--------\n");
 		Double pctDone = 100 * new Double(evalsDone) / new Double(totalEvals);
 		Double pctInProgress = 100 * new Double(evalsInProgress) / new Double(totalEvals);
-		sb.append("Exploration: "+Text.rightJustify(totalEvals.toString(), 5)+" / "+Text.rightJustify(evalsDone.toString(), 5)+" done ("+TextUtils.F2.format(pctDone)+"%) / "+Text.rightJustify(evalsInProgress.toString(), 5)+" in progress ("+TextUtils.F2.format(pctInProgress)+"%) \n");
+		sb.append("Pipeline:    "+Text.rightJustify(totalEvals.toString(), 5)+" / "+Text.rightJustify(evalsDone.toString(), 5)+" done ("+TextUtils.F2.format(pctDone)+"%) / "+Text.rightJustify(evalsInProgress.toString(), 5)+" in progress ("+TextUtils.F2.format(pctInProgress)+"%) \n");
 		sb.append("\n");
 		if (this.timeStart!=null) sb.append("start time   ").append(TextUtils.FULLDATE.format(this.timeStart)).append("\n");
 		if (this.timeDone!=null)  sb.append("time done    ").append(TextUtils.FULLDATE.format(this.timeDone)).append("\n");
