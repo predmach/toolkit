@@ -41,12 +41,12 @@ public class DataPartitionTaskContainer extends TaskContainer {
 	}
 
 	@Override
-	public TextSerializable processPreSubContainers(TextSerializable previousState) {
+	public TextSerializable processPreSubContainers(Task configuredTask, TextSerializable previousState) {
 		return null;
 	}
 
 	@Override
-	public TextSerializable processPostSubContainers(TextSerializable previousState) {
+	public TextSerializable processPostSubContainers(Task configuredTask, TextSerializable previousState) {
 		return null;
 	}
 
@@ -76,21 +76,21 @@ public class DataPartitionTaskContainer extends TaskContainer {
 
 	@Override
 	public Boolean supportsParallelization() {
-		return false;
+		return true;
 	}
 
 	@Override
-	public void processPreDataBlock(TextSerializable previousState) {
+	public void processPreDataBlock(Task configuredTask, TextSerializable previousState) {
 		
 	}
 
 	@Override
-	public DataItem processDataItem(DataItem dataItem) {
+	public DataItem processDataItem(Task configuredTask, DataItem dataItem) {
 		return null;
 	}
 
 	@Override
-	public TextSerializable processPostDataBlock() {
+	public TextSerializable processPostDataBlock(Task configuredTask) {
 		return null;
 		
 	}
@@ -103,13 +103,15 @@ public class DataPartitionTaskContainer extends TaskContainer {
 	}
 
 	@Override
-	public TextSerializable processPreLoop(TextSerializable previousState) {
+	public TextSerializable processPreLoop(Task configuredTask, TextSerializable previousState) {
 		return null;
 	}
 
 	@Override
-	public TextSerializable processPostLoop(List<TextSerializable> previousState) {
-		return null;
+	public TextSerializable processPostLoop(Task configuredTask, List<TextSerializable> previousStates) {
+		DataPartitionTask task = (DataPartitionTask)configuredTask;
+		TextSerializable returningState = task.afterProcessingAllPartitions(previousStates);
+		return returningState;
 	}
 
 	@Override

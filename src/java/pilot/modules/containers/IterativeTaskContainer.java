@@ -10,10 +10,12 @@ import org.json.simple.parser.ParseException;
 
 import bigs.api.core.BIGSParam;
 import bigs.api.exceptions.BIGSException;
+import bigs.core.utils.Log;
 import pilot.core.DataItem;
 import pilot.core.Task;
 import pilot.core.TaskContainer;
 import pilot.core.TextSerializable;
+import pilot.modules.ml.kmeans.KMeansIterationState;
 
 public class IterativeTaskContainer extends TaskContainer {
 
@@ -36,13 +38,17 @@ public class IterativeTaskContainer extends TaskContainer {
 	}
 	
 	@Override
-	public TextSerializable processPreSubContainers(TextSerializable previousState) {
-		return null;
+	public TextSerializable processPreSubContainers(Task configuredTask, TextSerializable previousState) {
+		IterativeTask myTask = (IterativeTask)configuredTask;
+		TextSerializable resultingState = myTask.beforeIteration(previousState);
+		return resultingState;
 	}
 
 	@Override
-	public TextSerializable processPostSubContainers(TextSerializable previousState) {
-		return null;
+	public TextSerializable processPostSubContainers(Task configuredTask, TextSerializable previousState) {
+		IterativeTask myTask = (IterativeTask)configuredTask;
+		TextSerializable resultingState = myTask.afterIteration(previousState);
+		return resultingState;
 	}
 
 	@Override
@@ -52,8 +58,7 @@ public class IterativeTaskContainer extends TaskContainer {
 			TaskContainer tb = new IterativeTaskContainer(this.numberOfIterations, i);
 			r.add(tb);
 		}		
-		return r;
-		
+		return r;		
 	}
 
 	@Override
@@ -65,8 +70,9 @@ public class IterativeTaskContainer extends TaskContainer {
 
 	@Override
 	public List<Class<? extends Task>> allowedTasks() {
-		// TODO Auto-generated method stub
-		return null;
+		 List<Class<? extends Task>> r = new  ArrayList<Class<? extends Task>>();
+		 r.add(IterativeTask.class);
+		 return r;
 	}
 
 	@Override
@@ -75,17 +81,17 @@ public class IterativeTaskContainer extends TaskContainer {
 	}
 
 	@Override
-	public void processPreDataBlock(TextSerializable previousState) {
+	public void processPreDataBlock(Task configuredTask, TextSerializable previousState) {
 		
 	}
 
 	@Override
-	public DataItem processDataItem(DataItem dataItem) {
+	public DataItem processDataItem(Task configuredTask, DataItem dataItem) {
 		return null;
 	}
 
 	@Override
-	public TextSerializable processPostDataBlock() {
+	public TextSerializable processPostDataBlock(Task configuredTask) {
 		return null;
 		
 	}
@@ -96,12 +102,12 @@ public class IterativeTaskContainer extends TaskContainer {
 	}
 
 	@Override
-	public TextSerializable processPreLoop(TextSerializable previousState) {
+	public TextSerializable processPreLoop(Task configuredTask, TextSerializable previousState) {
 		return null;
 	}
 
 	@Override
-	public TextSerializable processPostLoop(List<TextSerializable> previousState) {
+	public TextSerializable processPostLoop(Task configuredTask, List<TextSerializable> previousState) {
 		return null;
 	}
 

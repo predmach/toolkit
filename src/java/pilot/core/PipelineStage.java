@@ -74,8 +74,19 @@ public class PipelineStage {
 	void generateTaskContainerCascade() {
 
 			this.topLevelContainer = new TopLevelTaskContainer(this);
-			List<TaskContainer> containers = this.generateTaskContainers(this.configuredTask.getTaskContainerCascade(),0);
-			for (TaskContainer c: containers) {
+			List<TaskContainer> containerCascade = this.configuredTask.getTaskContainerCascade();
+
+			// checks if the declared containers accept the task that wants to use them
+			for (TaskContainer container: containerCascade) {
+				if (!container.allowsTask(configuredTask)) {
+					throw new BIGSException("container "+container.getClass().getName()+" does not allow tasks of type "+configuredTask.getClass().getName());
+				}
+			}
+
+			List<TaskContainer> configuredContainers = this.generateTaskContainers(containerCascade,0);
+			
+			
+			for (TaskContainer c: configuredContainers) {
 				this.topLevelContainer.addTaskContainer(c);
 			}
 			

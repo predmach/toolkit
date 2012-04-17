@@ -24,7 +24,7 @@ import bigs.core.utils.Text;
 public class ScheduleItem {
 	
 	public final static String tableName = "schedules";
-	public final static String[] columnFamilies = new String[]{ "scheduling", "bigs" };	
+	public final static String[] columnFamilies = new String[]{ "scheduling", "bigs", "content" };	
 	
 	
 	public static Integer STATUS_PENDING     = 0;
@@ -53,6 +53,8 @@ public class ScheduleItem {
 	
 	Integer status = ScheduleItem.STATUS_PENDING;
 	
+	TextSerializable processState;
+	
 	public ScheduleItem() {}
 	
 	public ScheduleItem(Schedule schedule) {
@@ -79,9 +81,25 @@ public class ScheduleItem {
 		return schedule;
 	}
 	
+	public TextSerializable getProcessState() {
+		return this.processState;
+	}
+	
+	public void setProcessState(TextSerializable processState) {
+		this.processState = processState;
+	}
+	
+	public Task getConfiguredTask() {
+		return this.configuredTask;
+	}
+	
+	public TaskContainer getConfiguredTaskContainer() {
+		return this.configuredTaskContainer;
+	}
+	
 	public String getMethodName() {
 		return this.methodName;
-	}
+	}	
 	
 	public void setMethodName(String methodName) {
 		this.methodName = methodName;
@@ -286,6 +304,27 @@ public class ScheduleItem {
 			r.setHostnameStored(new String(shostname));
 		}
 				
+		byte[] sprocessStateClass = result.getValue("content", "class");		
+		if (sprocessStateClass!=null) {
+			Object obj;
+			try {
+				obj = Class.forName(new String(sprocessStateClass)).newInstance();
+				if (! (obj instanceof TextSerializable)) {
+					throw new BIGSException("state object for rowkey "+result.getRowKey()+" is not "+TextSerializable.class.getSimpleName());
+				}
+				
+				TextSerializable processState = (TextSerializable)obj;
+				byte[] sprocessStateObject = result.getValue("content", "data");		
+				if (sprocessStateObject!=null) {
+					processState.fromTextRepresentation(new String(sprocessStateObject));
+				}
+				r.setProcessState(processState);
+
+			} catch (Exception e) {
+				throw new BIGSException("error recreating state object "+e.getMessage());
+			} 
+		}		
+
 		String parentsIdsString = new String(result.getValue("scheduling", "parents"));
 		
 		if (parentsIdsString!=null && !parentsIdsString.trim().isEmpty()) {
@@ -355,6 +394,12 @@ public class ScheduleItem {
 		
 		put.add("scheduling", "method", Bytes.toBytes(this.getMethodName()));
 		
+		if (this.getProcessState()!=null) {
+			put.add("content", "class", Bytes.toBytes(this.getProcessState().getClass().getName()));
+			
+			put.add("content", "data", Bytes.toBytes(this.getProcessState().toTextRepresentation()));
+		}
+		
 		lastUpdate = new Date(Core.getTime());
     	
 		put.add("bigs", "lastupdate", Bytes.toBytes(TextUtils.FULLDATE.format(this.lastUpdate)));
@@ -386,6 +431,8 @@ public class ScheduleItem {
 		get.addColumn("scheduling", "task.container.object");
 		get.addColumn("scheduling", "method");
 		get.addColumn("scheduling", "parents");
+		get.addColumn("content", "data");
+		get.addColumn("content", "class");
 		return get;
 	}	
 
@@ -445,6 +492,7 @@ public class ScheduleItem {
 		r.lastUpdate = this.lastUpdate;
 		r.status = this.status;
 		r.elapsedTime = this.elapsedTime;
+		r.processState = this.processState;
 		return r;
 	}
 	

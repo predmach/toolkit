@@ -32,25 +32,25 @@ public abstract class TaskContainer implements Configurable, TextSerializable {
 	public abstract List<String> getDataItemTags(DataItem tag);
 
 	
-	public abstract TextSerializable processPreSubContainers(TextSerializable previousState);
+	public abstract TextSerializable processPreSubContainers(Task configuredTask, TextSerializable previousState);
 	
-	public abstract TextSerializable processPostSubContainers(TextSerializable previousState);
+	public abstract TextSerializable processPostSubContainers(Task configuredTask, TextSerializable previousState);
 		
 	
-	public abstract TextSerializable processPreLoop(TextSerializable previousState);
+	public abstract TextSerializable processPreLoop(Task configuredTask, TextSerializable previousState);
 	
-	public abstract TextSerializable processPostLoop(List<TextSerializable> previousStates);	
+	public abstract TextSerializable processPostLoop(Task configuredTask, List<TextSerializable> previousStates);	
 
 	/**
 	 * returs void because pre-process-post all run within the same process and, thus, 
 	 * only post needs to return a state for the framework to handle
 	 * @param previousState
 	 */
-	public abstract void processPreDataBlock(TextSerializable previousState);
+	public abstract void processPreDataBlock(Task configuredTask, TextSerializable previousState);
 	
-	public abstract DataItem processDataItem(DataItem dataItem);
+	public abstract DataItem processDataItem(Task configuredTask, DataItem dataItem);
 
-	public abstract TextSerializable processPostDataBlock();
+	public abstract TextSerializable processPostDataBlock(Task configuredTask);
 			
 	
 	public List<TaskContainer> getTaskContainers() {
@@ -89,6 +89,22 @@ public abstract class TaskContainer implements Configurable, TextSerializable {
 		} 
 	}
 
+	
+	/**
+	 * returns true if this task container can contain the task 
+	 * passed as parameter
+	 * @param task the task to check for
+	 * @return true if this container accepts the task passed as parameter
+	 */
+	public Boolean allowsTask (Task task) {
+		if (this.allowedTasks()==null) {
+			throw new BIGSException("task container "+this.getClass().getName()+" does not support any task. check its implementation");
+		}
+		for (Class<? extends Task> c: this.allowedTasks()) {
+			if (c.isAssignableFrom(task.getClass())) return true;			
+		}
+		return false;
+	}
 	
 	/**
 	 * Returns the last schedule item of the list.

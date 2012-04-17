@@ -1,9 +1,14 @@
 package pilot.core.worker;
+import java.util.ArrayList;
 import java.util.List;
 
 import pilot.core.Schedule;
 import pilot.core.ScheduleItem;
+import pilot.core.Task;
+import pilot.core.TaskContainer;
+import pilot.core.TextSerializable;
 
+import bigs.api.exceptions.BIGSException;
 import bigs.api.storage.DataSource;
 import bigs.api.storage.Put;
 import bigs.api.storage.Table;
@@ -34,7 +39,7 @@ public class Worker {
     		return null;
     	}
     	
-    	// Look what exploration still has schedule item pending
+    	// Look what pipeline still has schedule items pending
     	for (Pipeline pipeline: activePipelines) {
     		Schedule schedule = pipeline.getStages().get(0).loadSchedule();
     		
@@ -110,6 +115,7 @@ public class Worker {
 	        	}        	
         	} catch (Exception e) {
         		Log.error("worker catched exception "+e.getClass().getName()+", "+e.getMessage());
+        		e.printStackTrace();
         		Log.error("will wait a while and start looking to something to do again");
         		Core.sleep(BIGSProperties.WORKER_ALIVE_INTERVAL);
         	}
@@ -121,74 +127,64 @@ public class Worker {
 	public void doScheduleItem(ScheduleItem scheduleItem) {
 		
 		currentScheduleItem = scheduleItem;
-		Log.info("DUMMY EXECUTION OF "+scheduleItem.toString());
-		Long minTime = 5L;
-		Long maxTime = 20L;
+
+		String methodName = scheduleItem.getMethodName();
+		TaskContainer configuredContainer = scheduleItem.getConfiguredTaskContainer();
+		Task configuredTask = scheduleItem.getConfiguredTask();
+		Schedule schedule = scheduleItem.getSchedule();
+		
+		Log.info("doing "+scheduleItem.toString());
+		
+		if (!scheduleItem.getMethodName().equals("postLoop")) {
+			List<Integer> parentsIds = scheduleItem.getParentsIds();
+			if (parentsIds.size()>1) {
+				throw new BIGSException("schedule item "+scheduleItem.toString()+" can only have one parent and it has "+parentsIds.size());
+			}
+	
+			TextSerializable previousState = null;
+			
+			Integer parentId = null;
+			if (parentsIds.size()>0) parentId = parentsIds.get(0);
+			if (parentId!=null) previousState = schedule.get(parentId).getProcessState();
+			
+			TextSerializable resultState = null;
+			
+			
+			if (methodName.equals("preSubContainers")) {				
+				resultState = configuredContainer.processPreSubContainers(configuredTask, previousState);
+			} else if (methodName.equals("postSubContainers")) {
+				resultState = configuredContainer.processPostSubContainers(configuredTask, previousState);				
+			} else if (methodName.equals("LOOP processDataItem")) {
+				configuredContainer.processPreDataBlock(configuredTask, previousState);
+				System.out.println("**** INSERT PROCESSING DATA ITEMS ***");
+				resultState = configuredContainer.processPostDataBlock(configuredTask);
+			} else if (methodName.equals("preLoop")) {
+				resultState = configuredContainer.processPreLoop(configuredTask, previousState);
+			}
+			
+			scheduleItem.setProcessState(resultState);
+		} else if (methodName.equals("postLoop")){
+			List<Integer> parentsIds = scheduleItem.getParentsIds();
+			List<TextSerializable> parentsStates = new ArrayList<TextSerializable>();
+			for (Integer i: parentsIds) {
+				ScheduleItem parent = schedule.get(i);
+				if (parent==null) {
+					parentsStates.add(null);
+				} else {
+					parentsStates.add(parent.getProcessState());
+				}
+			}
+			
+			TextSerializable resultState = configuredContainer.processPostLoop(configuredTask, parentsStates);
+			scheduleItem.setProcessState(resultState);
+		}
+		
+		Long minTime = 2L;
+		Long maxTime = 5L;
 		Long elapsedTime = minTime + new Double(Math.random()*( maxTime.doubleValue()-minTime.doubleValue())).longValue();
 		Core.sleep(elapsedTime * 1000L);
 		
-/*		
-		Log.info("worker on eval "+eval.toString());
-		currentEvaluation = eval;
-
-		Integer stageNumber = eval.getStageNumber().intValue()-1;
-		ExplorationStage stage = eval.getParentExploration().getStages().get(stageNumber);
-		DataSource originDataSource    = stage.getConfiguredOriginDataSource();
-		String     originDataTableName = stage.getOriginContainerName();
-		DataSource destinationDataSource    = stage.getConfiguredDestinationDataSource();
-		String     destinationDataTableName = stage.getDestinationContainerName();
-				
-		Algorithm algorithm = eval.getConfiguredAlgorithm();
 		
-		Data.createDataTableIfDoesNotExist(destinationDataSource, destinationDataTableName);
-
-		Table originTable = originDataSource.getTable(originDataTableName);
-		Table destinationTable = destinationDataSource.getTable(destinationDataTableName);
-				
-		Scan scan = originTable.createScanObject();
-		for (String family: Data.dataTableColumnFamilies) {
-			scan.addFamily(family);
-		}
-		scan.setFilterByColumnValue("splits", Text.zeroPad(eval.getExplorationNumber()), eval.getSplitNumber().toString().getBytes());
-		ResultScanner rs = originTable.getScan(scan);
-		try {
-			for (Result rr = rs.next(); rr!=null; rr = rs.next()) {						
-				Log.info("      input  rowkey "+rr.getRowKey());
-
-				byte[] bytes = rr.getValue("content", "data");
-
-				Date startTime = new Date();
-				//---------------------------------------
-				// This is the actual algorithm running
-				byte[] result = algorithm.run(bytes);
-				//---------------------------------------
-				if (abort) {
-					Log.error("aborting this evaluation: "+eval.getRowKey());
-					return;
-				}
-				Date endTime = new Date();
-				
-				eval.addToElapsedTime(endTime.getTime() - startTime.getTime());
-
-				String destinationRowKey = eval.getRowKey()+":"+rr.getRowKey();
-				if (algorithm.outputDataRowkeyPrefix()==Algorithm.ROWKEYPREFIX_EXPLORATION_CONFIG_STAGE) {
-					destinationRowKey = Text.zeroPad(eval.getExplorationNumber())+"."+
-				                        Text.zeroPad(eval.getConfigNumber())+"."+
-				                        Text.zeroPad(eval.getStageNumber())+":"+
-				                        rr.getRowKey();					
-				}				
-				Log.info("      output rowkey "+destinationRowKey);
-				
-				Put put = destinationTable.createPutObject(destinationRowKey);
-				put.add("content", "data", result);
-				put = Data.fillInHostMetadata(put);
-				destinationTable.put(put);
-			}
-		} finally {
-			rs.close();
-		}		
-		currentEvaluation = null;
-*/		
 	}
 	
 	public String toString() {

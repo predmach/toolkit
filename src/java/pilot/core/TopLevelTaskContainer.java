@@ -35,37 +35,37 @@ public class TopLevelTaskContainer extends TaskContainer {
 	}
 
 	@Override
-	public TextSerializable processPreSubContainers(TextSerializable previousState) {
+	public TextSerializable processPreSubContainers(Task configuredTask, TextSerializable previousState) {
 		return null;
 	}
 
 	@Override
-	public TextSerializable processPostSubContainers(TextSerializable previousState) {
+	public TextSerializable processPostSubContainers(Task configuredTask, TextSerializable previousState) {
 		return null;
 	}
 
 	@Override
-	public TextSerializable processPreLoop(TextSerializable previousState) {
+	public TextSerializable processPreLoop(Task configuredTask, TextSerializable previousState) {
 		return null;
 	}
 
 	@Override
-	public TextSerializable processPostLoop(List<TextSerializable> previousState) {
+	public TextSerializable processPostLoop(Task configuredTask, List<TextSerializable> previousState) {
 		return null;
 	}
 
 	@Override
-	public void processPreDataBlock(TextSerializable previousState) {
+	public void processPreDataBlock(Task configuredTask, TextSerializable previousState) {
 		
 	}
 
 	@Override
-	public DataItem processDataItem(DataItem dataItem) {
+	public DataItem processDataItem(Task configuredTask, DataItem dataItem) {
 		return null;
 	}
 
 	@Override
-	public TextSerializable processPostDataBlock() {
+	public TextSerializable processPostDataBlock(Task configuredTask) {
 		return null;
 		
 	}

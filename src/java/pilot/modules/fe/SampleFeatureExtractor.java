@@ -16,23 +16,6 @@ public class SampleFeatureExtractor implements DataPartitionTask {
 	@BIGSParam
 	public Integer numberOfSplits = 1;
 	
-	@Override
-	public void beforeProcessingPartition() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void afterProcessingPartition() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public DataItem processDataItem(DataItem item) {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 	@Override
 	public String toTextRepresentation() {
@@ -49,6 +32,52 @@ public class SampleFeatureExtractor implements DataPartitionTask {
 		List<TaskContainer> r = new ArrayList<TaskContainer>();
 		r.add(new DataPartitionTaskContainer(numberOfSplits));
 		return r;
+	}
+
+	@Override
+	public TextSerializable beforeProcessingPartition(
+			TextSerializable previousState) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public TextSerializable afterProcessingPartition(
+			TextSerializable previousState) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void startPartition(TextSerializable previousState) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public DataItem processDataItem(DataItem item) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public TextSerializable finalizePartition() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public TextSerializable beforeProcessingAllPartitions(
+			TextSerializable previousState) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public TextSerializable afterProcessingAllPartitions(
+			List<TextSerializable> previousStates) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 
