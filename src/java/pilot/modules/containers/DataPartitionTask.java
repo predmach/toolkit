@@ -8,9 +8,9 @@ import pilot.core.TextSerializable;
 
 public interface DataPartitionTask extends Task {
 
-	public TextSerializable beforeProcessingPartition(TextSerializable previousState);
+	public TextSerializable beforeProcessingPartitionSubContainers(TextSerializable previousState);
 	
-	public TextSerializable afterProcessingPartition(TextSerializable previousState);
+	public TextSerializable afterProcessingPartitionSubContainers(TextSerializable previousState);
 	
 	public void startPartition(TextSerializable previousState);
 		

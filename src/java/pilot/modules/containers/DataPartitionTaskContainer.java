@@ -40,15 +40,6 @@ public class DataPartitionTaskContainer extends TaskContainer {
 		return this.numberOfPartitions;
 	}
 
-	@Override
-	public TextSerializable processPreSubContainers(Task configuredTask, TextSerializable previousState) {
-		return null;
-	}
-
-	@Override
-	public TextSerializable processPostSubContainers(Task configuredTask, TextSerializable previousState) {
-		return null;
-	}
 
 	@Override
 	public List<TaskContainer> generateMyTaskContainers() {
@@ -79,21 +70,6 @@ public class DataPartitionTaskContainer extends TaskContainer {
 		return true;
 	}
 
-	@Override
-	public void processPreDataBlock(Task configuredTask, TextSerializable previousState) {
-		
-	}
-
-	@Override
-	public DataItem processDataItem(Task configuredTask, DataItem dataItem) {
-		return null;
-	}
-
-	@Override
-	public TextSerializable processPostDataBlock(Task configuredTask) {
-		return null;
-		
-	}
 
 	@Override
 	public String toString() {
@@ -103,8 +79,42 @@ public class DataPartitionTaskContainer extends TaskContainer {
 	}
 
 	@Override
-	public TextSerializable processPreLoop(Task configuredTask, TextSerializable previousState) {
+	public void processPreDataBlock(Task configuredTask, TextSerializable previousState) {
+		DataPartitionTask task = (DataPartitionTask)configuredTask;
+		task.startPartition(previousState);		
+	}
+
+	@Override
+	public DataItem processDataItem(Task configuredTask, DataItem dataItem) {
 		return null;
+	}
+
+	@Override
+	public TextSerializable processPostDataBlock(Task configuredTask) {
+		DataPartitionTask task = (DataPartitionTask)configuredTask;
+		TextSerializable returningState = task.finalizePartition();
+		return returningState;				
+	}
+
+	@Override
+	public TextSerializable processPreSubContainers(Task configuredTask, TextSerializable previousState) {
+		DataPartitionTask task = (DataPartitionTask)configuredTask;
+		TextSerializable returningState = task.beforeProcessingPartitionSubContainers(previousState);
+		return returningState;		
+	}
+
+	@Override
+	public TextSerializable processPostSubContainers(Task configuredTask, TextSerializable previousState) {
+		DataPartitionTask task = (DataPartitionTask)configuredTask;
+		TextSerializable returningState = task.afterProcessingPartitionSubContainers(previousState);
+		return returningState;		
+	}
+
+	@Override
+	public TextSerializable processPreLoop(Task configuredTask, TextSerializable previousState) {
+		DataPartitionTask task = (DataPartitionTask)configuredTask;
+		TextSerializable returningState = task.beforeProcessingAllPartitions(previousState);
+		return returningState;		
 	}
 
 	@Override

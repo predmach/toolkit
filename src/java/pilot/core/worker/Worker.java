@@ -100,6 +100,7 @@ public class Worker {
 							pipeline.setTimeDone(null);
 							pipeline.save();
 						}
+						currentScheduleItem = scheduleItem;
 						this.doScheduleItem(scheduleItem);
 						if (!abort) {
 							scheduleItem.setStatusDone();
@@ -108,6 +109,7 @@ public class Worker {
 							Log.info("schedule item aborted");
 							abort = false;
 						}
+						currentScheduleItem = null;
 	        		}        			
 	        	} else {
 	            	Log.info("no available schedule items found. will look again in a while");
@@ -126,7 +128,6 @@ public class Worker {
 	
 	public void doScheduleItem(ScheduleItem scheduleItem) {
 		
-		currentScheduleItem = scheduleItem;
 
 		String methodName = scheduleItem.getMethodName();
 		TaskContainer configuredContainer = scheduleItem.getConfiguredTaskContainer();
@@ -179,8 +180,8 @@ public class Worker {
 			scheduleItem.setProcessState(resultState);
 		}
 		
-		Long minTime = 2L;
-		Long maxTime = 5L;
+		Long minTime = 0L;
+		Long maxTime = 1L;
 		Long elapsedTime = minTime + new Double(Math.random()*( maxTime.doubleValue()-minTime.doubleValue())).longValue();
 		Core.sleep(elapsedTime * 1000L);
 		

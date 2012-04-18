@@ -13,7 +13,7 @@ import java.util.Properties;
 import pilot.core.PipelineStage;
 import pilot.core.Schedule;
 import pilot.core.ScheduleItem;
-import pilot.modules.ml.kmeans.KMeans;
+import pilot.core.examples.task.KMeans;
 
 import bigs.api.core.Algorithm;
 import bigs.api.exceptions.BIGSException;

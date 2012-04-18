@@ -35,14 +35,14 @@ public class SampleFeatureExtractor implements DataPartitionTask {
 	}
 
 	@Override
-	public TextSerializable beforeProcessingPartition(
+	public TextSerializable beforeProcessingPartitionSubContainers(
 			TextSerializable previousState) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public TextSerializable afterProcessingPartition(
+	public TextSerializable afterProcessingPartitionSubContainers(
 			TextSerializable previousState) {
 		// TODO Auto-generated method stub
 		return null;
