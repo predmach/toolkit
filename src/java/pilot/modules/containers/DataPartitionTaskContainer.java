@@ -11,12 +11,11 @@ import org.json.simple.parser.ParseException;
 import bigs.api.core.BIGSParam;
 import bigs.api.exceptions.BIGSException;
 
-import pilot.core.DataItem;
-import pilot.core.Task;
 import pilot.core.TaskContainer;
 import pilot.core.TextSerializable;
+import pilot.core.data.LLDDataItem;
 
-public class DataPartitionTaskContainer extends TaskContainer {
+public class DataPartitionTaskContainer extends TaskContainer<DataPartitionTask> {
 
 	@BIGSParam
 	public Integer numberOfPartitions = 1;
@@ -42,28 +41,15 @@ public class DataPartitionTaskContainer extends TaskContainer {
 
 
 	@Override
-	public List<TaskContainer> generateMyTaskContainers() {
-		List<TaskContainer> r = new ArrayList<TaskContainer>();
+	public List<TaskContainer<DataPartitionTask>> generateMyConfiguredTaskContainers() {
+		List<TaskContainer<DataPartitionTask>> r = new ArrayList<TaskContainer<DataPartitionTask>>();
 		for (int i=1; i<= this.numberOfPartitions; i++) {
-			TaskContainer tb = new DataPartitionTaskContainer(this.numberOfPartitions, i);
+			TaskContainer<DataPartitionTask> tb = new DataPartitionTaskContainer(this.numberOfPartitions, i);
 			r.add(tb); 
 		}
 		return r;		
 	}
 
-	@Override
-	public List<Class<? extends TaskContainer>> allowedTaskContainers() {
-		List<Class<? extends TaskContainer>> r = new ArrayList<Class<? extends TaskContainer>>();
-		r.add(TaskContainer.class);
-		return r;
-	}
-
-	@Override
-	public List<Class<? extends Task>> allowedTasks() {
-		 List<Class<? extends Task>> r = new  ArrayList<Class<? extends Task>>();
-		 r.add(DataPartitionTask.class);
-		 return r;
-	}
 
 	@Override
 	public Boolean supportsParallelization() {
@@ -79,53 +65,48 @@ public class DataPartitionTaskContainer extends TaskContainer {
 	}
 
 	@Override
-	public void processPreDataBlock(Task configuredTask, TextSerializable previousState) {
-		DataPartitionTask task = (DataPartitionTask)configuredTask;
-		task.startPartition(previousState);		
+	public void processPreDataBlock(DataPartitionTask configuredTask, TextSerializable previousState) {
+		configuredTask.startPartition(previousState);		
 	}
 
 	@Override
-	public DataItem processDataItem(Task configuredTask, DataItem dataItem) {
+	public LLDDataItem processDataItem(DataPartitionTask configuredTask, LLDDataItem dataItem) {
 		return null;
 	}
 
 	@Override
-	public TextSerializable processPostDataBlock(Task configuredTask) {
-		DataPartitionTask task = (DataPartitionTask)configuredTask;
-		TextSerializable returningState = task.finalizePartition();
+	public TextSerializable processPostDataBlock(DataPartitionTask configuredTask) {
+		TextSerializable returningState = configuredTask.finalizePartition();
 		return returningState;				
 	}
 
 	@Override
-	public TextSerializable processPreSubContainers(Task configuredTask, TextSerializable previousState) {
-		DataPartitionTask task = (DataPartitionTask)configuredTask;
-		TextSerializable returningState = task.beforeProcessingPartitionSubContainers(previousState);
+	public TextSerializable processPreSubContainers(DataPartitionTask configuredTask, TextSerializable previousState) {
+		TextSerializable returningState = configuredTask.beforeProcessingPartitionSubContainers(previousState);
 		return returningState;		
 	}
 
 	@Override
-	public TextSerializable processPostSubContainers(Task configuredTask, TextSerializable previousState) {
+	public TextSerializable processPostSubContainers(DataPartitionTask configuredTask, TextSerializable previousState) {
 		DataPartitionTask task = (DataPartitionTask)configuredTask;
 		TextSerializable returningState = task.afterProcessingPartitionSubContainers(previousState);
 		return returningState;		
 	}
 
 	@Override
-	public TextSerializable processPreLoop(Task configuredTask, TextSerializable previousState) {
-		DataPartitionTask task = (DataPartitionTask)configuredTask;
-		TextSerializable returningState = task.beforeProcessingAllPartitions(previousState);
+	public TextSerializable processPreLoop(DataPartitionTask configuredTask, TextSerializable previousState) {
+		TextSerializable returningState = configuredTask.beforeProcessingAllPartitions(previousState);
 		return returningState;		
 	}
 
 	@Override
-	public TextSerializable processPostLoop(Task configuredTask, List<TextSerializable> previousStates) {
-		DataPartitionTask task = (DataPartitionTask)configuredTask;
-		TextSerializable returningState = task.afterProcessingAllPartitions(previousStates);
+	public TextSerializable processPostLoop(DataPartitionTask configuredTask, List<TextSerializable> previousStates) {
+		TextSerializable returningState = configuredTask.afterProcessingAllPartitions(previousStates);
 		return returningState;
 	}
 
 	@Override
-	public List<String> getDataItemTags(DataItem tag) {
+	public List<String> getDataItemTags(LLDDataItem tag) {
 		// TODO Auto-generated method stub
 		return null;
 	}

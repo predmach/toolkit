@@ -2,9 +2,9 @@ package pilot.modules.containers;
 
 import java.util.List;
 
-import pilot.core.DataItem;
 import pilot.core.Task;
 import pilot.core.TextSerializable;
+import pilot.core.data.LLDDataItem;
 
 public interface IterativeTask extends Task {
 	
@@ -18,7 +18,7 @@ public interface IterativeTask extends Task {
 	
 	public void startDataBlock(TextSerializable previousState);
 	
-	public DataItem processDataItem(DataItem item);
+	public LLDDataItem processDataItem(LLDDataItem item);
 	
 	public TextSerializable finalizeDataBlock();
 	

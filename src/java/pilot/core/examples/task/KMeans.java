@@ -11,9 +11,10 @@ import org.json.simple.parser.ParseException;
 import bigs.api.core.BIGSParam;
 import bigs.api.exceptions.BIGSException;
 import bigs.core.utils.Log;
-import pilot.core.DataItem;
+import pilot.core.Task;
 import pilot.core.TaskContainer;
 import pilot.core.TextSerializable;
+import pilot.core.data.LLDDataItem;
 import pilot.modules.containers.DataPartitionTask;
 import pilot.modules.containers.DataPartitionTaskContainer;
 import pilot.modules.containers.IterativeTask;
@@ -30,13 +31,6 @@ public class KMeans implements DataPartitionTask, IterativeTask {
 	@BIGSParam
 	public Integer numberOfPartitions;
 	
-	@Override
-	public DataItem processDataItem(DataItem item) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-
 	@SuppressWarnings("unchecked")
 	@Override
 	public String toTextRepresentation() {
@@ -69,13 +63,20 @@ public class KMeans implements DataPartitionTask, IterativeTask {
 	}	
 	
 	@Override
-	public List<TaskContainer> getTaskContainerCascade() {
-		List<TaskContainer> r = new ArrayList<TaskContainer>();
+	public List<TaskContainer<Task>> getTaskContainerCascade() {
+		List<TaskContainer<Task>> r = new ArrayList<TaskContainer<Task>>();
 		r.add(new IterativeTaskContainer(numberOfIterations));
 		r.add(new DataPartitionTaskContainer(numberOfPartitions));
+		
 		return r;
 	}
 
+	
+	/** -------------------------------------------------------------------
+
+	      Methods for IterativeTaskContainer
+	    
+	    -------------------------------------------------------------------*/
 
 	@Override
 	public TextSerializable startIteration(TextSerializable previousState) {
@@ -135,21 +136,11 @@ public class KMeans implements DataPartitionTask, IterativeTask {
 	}
 
 
-	@Override
-	public TextSerializable beforeProcessingPartitionSubContainers(
-			TextSerializable previousState) {
-		Log.debug(this.getClass().getName()+" "+Thread.currentThread().getStackTrace()[1].getMethodName());
-		return null;
-	}
+	/** -------------------------------------------------------------------
 
-
-	@Override
-	public TextSerializable afterProcessingPartitionSubContainers(
-			TextSerializable previousState) {
-		Log.debug(this.getClass().getName()+" "+Thread.currentThread().getStackTrace()[1].getMethodName());
-		return null;
-	}
-
+    	Methods for DataPartitionTaskContainer
+  
+      	-------------------------------------------------------------------*/
 
 	KMeansState partitionState = new KMeansState();
 	@Override
@@ -189,5 +180,27 @@ public class KMeans implements DataPartitionTask, IterativeTask {
 		}
 		return s;
 	}
+
+	@Override
+	public TextSerializable beforeProcessingPartitionSubContainers(
+			TextSerializable previousState) {
+		Log.debug(this.getClass().getName()+" "+Thread.currentThread().getStackTrace()[1].getMethodName());
+		return null;
+	}
+
+
+	@Override
+	public TextSerializable afterProcessingPartitionSubContainers(
+			TextSerializable previousState) {
+		Log.debug(this.getClass().getName()+" "+Thread.currentThread().getStackTrace()[1].getMethodName());
+		return null;
+	}
+
+	@Override
+	public LLDDataItem processDataItem(LLDDataItem item) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	
 }

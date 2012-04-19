@@ -44,26 +44,22 @@ public class PipelineStage {
 		return this.stageNumber;
 	}
 
-	List<TaskContainer> generateTaskContainers (List<TaskContainer> containerCascade, Integer level) {
-		List<TaskContainer> r = new ArrayList<TaskContainer>();
+	List<TaskContainer<Task>> generateTaskContainers (List<TaskContainer<Task>> containerCascade, Integer level) {
+		List<TaskContainer<Task>> r = new ArrayList<TaskContainer<Task>>();
 
 		if (level>=containerCascade.size()) {
 			return r;
 		}
 		
-		TaskContainer container = containerCascade.get(level);
+		TaskContainer<Task> container = containerCascade.get(level);
 
-		for (TaskContainer tc: container.generateMyTaskContainers()) {
+		for (TaskContainer<Task> tc: container.generateMyConfiguredTaskContainers()) {
 			r.add(tc);
 			tc.setPipelineStage(this);
-			List<TaskContainer> subContainers = this.generateTaskContainers(containerCascade, level+1);				
+			List<TaskContainer<Task>> subContainers = this.generateTaskContainers(containerCascade, level+1);				
 			if (subContainers!=null) {
-				for (TaskContainer stc: subContainers) {
-					if (tc.allowsTaskContainer(stc.getClass())) {
-						tc.addTaskContainer(stc);
-					} else {
-						throw new BIGSException(tc.getClass().getSimpleName()+" does not allow task containers of type "+stc.getClass().getSimpleName());
-					}
+				for (TaskContainer<Task> stc: subContainers) {
+					tc.addTaskContainer(stc);
 				}
 			}
 		}
@@ -74,19 +70,12 @@ public class PipelineStage {
 	void generateTaskContainerCascade() {
 
 			this.topLevelContainer = new TopLevelTaskContainer(this);
-			List<TaskContainer> containerCascade = this.configuredTask.getTaskContainerCascade();
+			List<TaskContainer<Task>> containerCascade = this.configuredTask.getTaskContainerCascade();
 
-			// checks if the declared containers accept the task that wants to use them
-			for (TaskContainer container: containerCascade) {
-				if (!container.allowsTask(configuredTask)) {
-					throw new BIGSException("container "+container.getClass().getName()+" does not allow tasks of type "+configuredTask.getClass().getName());
-				}
-			}
-
-			List<TaskContainer> configuredContainers = this.generateTaskContainers(containerCascade,0);
+			List<TaskContainer<Task>> configuredContainers = this.generateTaskContainers(containerCascade,0);
 			
 			
-			for (TaskContainer c: configuredContainers) {
+			for (TaskContainer<?> c: configuredContainers) {
 				this.topLevelContainer.addTaskContainer(c);
 			}
 			

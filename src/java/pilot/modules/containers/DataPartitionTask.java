@@ -2,9 +2,9 @@ package pilot.modules.containers;
 
 import java.util.List;
 
-import pilot.core.DataItem;
 import pilot.core.Task;
 import pilot.core.TextSerializable;
+import pilot.core.data.LLDDataItem;
 
 public interface DataPartitionTask extends Task {
 
@@ -14,7 +14,7 @@ public interface DataPartitionTask extends Task {
 	
 	public void startPartition(TextSerializable previousState);
 		
-	public DataItem processDataItem(DataItem item);
+	public LLDDataItem processDataItem(LLDDataItem item);
 	
 	public TextSerializable finalizePartition();
 	

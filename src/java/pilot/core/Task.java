@@ -6,6 +6,6 @@ import bigs.api.core.Configurable;
 
 public interface Task extends TextSerializable, Configurable {
 	
-	public List<TaskContainer> getTaskContainerCascade();
+	public List<TaskContainer<Task>> getTaskContainerCascade();
 
 }

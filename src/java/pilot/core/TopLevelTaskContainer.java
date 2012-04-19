@@ -2,7 +2,9 @@ package pilot.core;
 
 import java.util.List;
 
-public class TopLevelTaskContainer extends TaskContainer {
+import pilot.core.data.LLDDataItem;
+
+public class TopLevelTaskContainer extends TaskContainer<Task> {
 
 	public TopLevelTaskContainer(){}
 	
@@ -11,19 +13,7 @@ public class TopLevelTaskContainer extends TaskContainer {
 	}
 	
 	@Override
-	public List<Class<? extends TaskContainer>> allowedTaskContainers() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public List<Class<? extends Task>> allowedTasks() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public List<TaskContainer> generateMyTaskContainers() {
+	public List<TaskContainer<Task>> generateMyConfiguredTaskContainers() {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -60,7 +50,7 @@ public class TopLevelTaskContainer extends TaskContainer {
 	}
 
 	@Override
-	public DataItem processDataItem(Task configuredTask, DataItem dataItem) {
+	public LLDDataItem processDataItem(Task configuredTask, LLDDataItem dataItem) {
 		return null;
 	}
 
@@ -76,7 +66,7 @@ public class TopLevelTaskContainer extends TaskContainer {
 	}
 
 	@Override
-	public List<String> getDataItemTags(DataItem tag) {
+	public List<String> getDataItemTags(LLDDataItem tag) {
 		// TODO Auto-generated method stub
 		return null;
 	}

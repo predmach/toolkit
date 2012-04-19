@@ -5,9 +5,10 @@ import java.util.List;
 
 import bigs.api.core.BIGSParam;
 
-import pilot.core.DataItem;
+import pilot.core.Task;
 import pilot.core.TaskContainer;
 import pilot.core.TextSerializable;
+import pilot.core.data.LLDDataItem;
 import pilot.modules.containers.DataPartitionTask;
 import pilot.modules.containers.DataPartitionTaskContainer;
 
@@ -28,9 +29,10 @@ public class SampleFeatureExtractor implements DataPartitionTask {
 	}
 
 	@Override
-	public List<TaskContainer> getTaskContainerCascade() {
-		List<TaskContainer> r = new ArrayList<TaskContainer>();
+	public List<TaskContainer<?>> getTaskContainerCascade() {
+		List<TaskContainer<?>> r = new ArrayList<TaskContainer<?>>();
 		r.add(new DataPartitionTaskContainer(numberOfSplits));
+		
 		return r;
 	}
 
@@ -55,7 +57,7 @@ public class SampleFeatureExtractor implements DataPartitionTask {
 	}
 
 	@Override
-	public DataItem processDataItem(DataItem item) {
+	public LLDDataItem processDataItem(LLDDataItem item) {
 		// TODO Auto-generated method stub
 		return null;
 	}

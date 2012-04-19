@@ -1,13 +1,15 @@
-package pilot.core;
+package pilot.core.data;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class DataItem implements TextSerializable {
+import pilot.core.TextSerializable;
+
+public class LLDDataItem implements DataItem {
 
 	List<List<Double>> data = new ArrayList<List<Double>>();
 	
-	public DataItem(List<List<Double>> data) {
+	public LLDDataItem(List<List<Double>> data) {
 		this.data = data;
 	}
 	

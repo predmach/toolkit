@@ -74,7 +74,11 @@ public class Test extends Command {
     @Override
 	public void run(String[] args) throws Exception {
     	//this.testTextSerializable(args);
-    	testPipelineProperties(args);
+    	testGenerics(args);
+    }
+    
+    void testGenerics(String[] args) {
+    	pilot.testing.Test.run();
     }
     
     void testTextSerializable(String[] args) {

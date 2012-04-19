@@ -5,6 +5,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import pilot.core.data.LLDDataItem;
+import pilot.testing.GenericDataType;
+
 import bigs.api.core.BIGSParam;
 import bigs.api.core.Configurable;
 import bigs.api.exceptions.BIGSException;
@@ -13,61 +16,57 @@ import bigs.core.utils.Core;
 import bigs.core.utils.Log;
 import bigs.core.utils.Text;
 
-public abstract class TaskContainer implements Configurable, TextSerializable {
+public abstract class TaskContainer<T extends Task> implements Configurable, TextSerializable {
 
-	List<TaskContainer> taskContainers = new ArrayList<TaskContainer>();
+	List<TaskContainer<Task>> taskContainers = new ArrayList<TaskContainer<Task>>();
 
-	TaskContainer parentTaskContainer = null;
+	TaskContainer<? extends Task> parentTaskContainer = null;
 	
 	PipelineStage pipelineStage = null;
-		
-	public abstract List<Class<? extends TaskContainer>> allowedTaskContainers();		
-	
-	public abstract List<Class<? extends Task>> allowedTasks();
-		
-	public abstract List<TaskContainer> generateMyTaskContainers();	
+			
+	public abstract List<TaskContainer<T>> generateMyConfiguredTaskContainers();	
 	
 	public abstract Boolean supportsParallelization();
 	
-	public abstract List<String> getDataItemTags(DataItem tag);
+	public abstract List<String> getDataItemTags(LLDDataItem tag);
 
 	
-	public abstract TextSerializable processPreSubContainers(Task configuredTask, TextSerializable previousState);
+	public abstract TextSerializable processPreSubContainers(T configuredTask, TextSerializable previousState);
 	
-	public abstract TextSerializable processPostSubContainers(Task configuredTask, TextSerializable previousState);
+	public abstract TextSerializable processPostSubContainers(T configuredTask, TextSerializable previousState);
 		
 	
-	public abstract TextSerializable processPreLoop(Task configuredTask, TextSerializable previousState);
+	public abstract TextSerializable processPreLoop(T configuredTask, TextSerializable previousState);
 	
-	public abstract TextSerializable processPostLoop(Task configuredTask, List<TextSerializable> previousStates);	
+	public abstract TextSerializable processPostLoop(T configuredTask, List<TextSerializable> previousStates);	
 
 	/**
 	 * returs void because pre-process-post all run within the same process and, thus, 
 	 * only post needs to return a state for the framework to handle
 	 * @param previousState
 	 */
-	public abstract void processPreDataBlock(Task configuredTask, TextSerializable previousState);
+	public abstract void processPreDataBlock(T configuredTask, TextSerializable previousState);
 	
-	public abstract DataItem processDataItem(Task configuredTask, DataItem dataItem);
+	public abstract LLDDataItem processDataItem(T configuredTask, LLDDataItem dataItem);
 
-	public abstract TextSerializable processPostDataBlock(Task configuredTask);
+	public abstract TextSerializable processPostDataBlock(T configuredTask);
 			
 	
-	public List<TaskContainer> getTaskContainers() {
+	public List<TaskContainer<Task>> getTaskContainers() {
 		return taskContainers;
 	}
 		
-	public void addTaskContainer(TaskContainer taskContainer) {
+	public void addTaskContainer(TaskContainer<Task> taskContainer) {
 		taskContainers.add(taskContainer);
 		taskContainer.setParentTaskContainer(this);
 		taskContainer.setPipelineStage(this.getPipelineStage());
 	}
 
-	public TaskContainer getParentTaskContainer() {
+	public TaskContainer<? extends Task> getParentTaskContainer() {
 		return parentTaskContainer;
 	}
 
-	public void setParentTaskContainer(TaskContainer parentTaskContainer) {
+	public void setParentTaskContainer(TaskContainer<? extends Task> parentTaskContainer) {
 		this.parentTaskContainer = parentTaskContainer;
 	}
 
@@ -83,28 +82,12 @@ public abstract class TaskContainer implements Configurable, TextSerializable {
 
 		System.out.println(prefix+this.toString());
 		if (!this.taskContainers.isEmpty()) {
-			for (TaskContainer tb: this.taskContainers) {
+			for (TaskContainer<Task> tb: this.taskContainers) {
 				tb.printOut(prefix+"     ");
 			}
 		} 
 	}
 
-	
-	/**
-	 * returns true if this task container can contain the task 
-	 * passed as parameter
-	 * @param task the task to check for
-	 * @return true if this container accepts the task passed as parameter
-	 */
-	public Boolean allowsTask (Task task) {
-		if (this.allowedTasks()==null) {
-			throw new BIGSException("task container "+this.getClass().getName()+" does not support any task. check its implementation");
-		}
-		for (Class<? extends Task> c: this.allowedTasks()) {
-			if (c.isAssignableFrom(task.getClass())) return true;			
-		}
-		return false;
-	}
 	
 	/**
 	 * Returns the last schedule item of the list.
@@ -119,14 +102,14 @@ public abstract class TaskContainer implements Configurable, TextSerializable {
 			ScheduleItem p1 = new ScheduleItem(schedule, this, pipelineStage.configuredTask, "preSubContainers");
 			if (parentScheduleItem!=null) p1.addParentId(parentScheduleItem.getId());
 
-			TaskContainer th = this.taskContainers.get(0).clone();
+			TaskContainer<Task> th = this.taskContainers.get(0).clone();
 			ScheduleItem p2 = new ScheduleItem(schedule, th, pipelineStage.configuredTask,  "preLoop").addParentId(p1.getId());
 
 			List<Integer> subContainerParentsIds = new ArrayList<Integer>();
 			if (this.taskContainers.size()>0) {
 				Boolean isParallel = th.supportsParallelization();
 				ScheduleItem parent = p2;
-				for (TaskContainer tb: this.taskContainers) {
+				for (TaskContainer<Task> tb: this.taskContainers) {
 					ScheduleItem item = tb.fillSchedule(schedule, parent);
 					if (isParallel) {
 						subContainerParentsIds.add(item.getId());
@@ -149,36 +132,18 @@ public abstract class TaskContainer implements Configurable, TextSerializable {
 		}
 	}
 	
-	public Boolean allowsTaskContainer(Class<? extends TaskContainer> subContainerClass) {
-		if (this.allowedTaskContainers()==null) {
-			return false;
-		} else {
-			Boolean classAllowed = false;
-			for (Class<? extends TaskContainer> c: this.allowedTaskContainers()) {
-				if (c.isAssignableFrom(subContainerClass)) {
-					classAllowed = true;
-					break;
-				}
-			}
-			return classAllowed;
-		}		
-	}
 
-	public static List<TaskContainer> fromProperties(Properties properties, String propertiesPrefix, Integer containerNumber) {
-		List<TaskContainer> r = new ArrayList<TaskContainer>();
+	public static List<TaskContainer<Task>> fromProperties(Properties properties, String propertiesPrefix, Integer containerNumber) {
+		List<TaskContainer<Task>> r = new ArrayList<TaskContainer<Task>>();
 		String containerPropertyName = "container."+Text.zeroPad(new Long(containerNumber), 2);
 		try {
-			TaskContainer container = Core.getConfiguredObject(containerPropertyName, TaskContainer.class, properties, propertiesPrefix);
-			for (TaskContainer tc: container.generateMyTaskContainers()) {
+			TaskContainer<Task> container = Core.getConfiguredObject(containerPropertyName, TaskContainer.class, properties, propertiesPrefix);
+			for (TaskContainer<Task> tc: container.generateMyConfiguredTaskContainers()) {
 				r.add(tc);
-				List<TaskContainer> subContainers = TaskContainer.fromProperties(properties, propertiesPrefix, containerNumber+1);				
+				List<TaskContainer<Task>> subContainers = TaskContainer.fromProperties(properties, propertiesPrefix, containerNumber+1);				
 				if (subContainers!=null) {
-					for (TaskContainer stc: subContainers) {
-						if (tc.allowsTaskContainer(stc.getClass())) {
+					for (TaskContainer<Task> stc: subContainers) {
 							tc.addTaskContainer(stc);
-						} else {
-							throw new BIGSException(tc.getClass().getSimpleName()+" does not allow task containers of type "+stc.getClass().getSimpleName());
-						}
 					}
 				}
 			}
@@ -188,11 +153,11 @@ public abstract class TaskContainer implements Configurable, TextSerializable {
 		}			
 	}
 
-	public TaskContainer clone() {
+	public TaskContainer<T> clone() {
 		Class<? extends TaskContainer> thisClass = this.getClass();
-		TaskContainer r;
+		TaskContainer<T> r;
 		try {
-			r = (TaskContainer)thisClass.newInstance();
+			r = (TaskContainer<T>)thisClass.newInstance();
 			for (Field field: thisClass.getFields()) {
 				if (field.isAnnotationPresent(BIGSParam.class)) {
 					field.set(r, field.get(this));

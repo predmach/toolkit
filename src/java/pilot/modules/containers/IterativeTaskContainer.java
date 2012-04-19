@@ -10,12 +10,11 @@ import org.json.simple.parser.ParseException;
 
 import bigs.api.core.BIGSParam;
 import bigs.api.exceptions.BIGSException;
-import pilot.core.DataItem;
-import pilot.core.Task;
 import pilot.core.TaskContainer;
 import pilot.core.TextSerializable;
+import pilot.core.data.LLDDataItem;
 
-public class IterativeTaskContainer extends TaskContainer {
+public class IterativeTaskContainer extends TaskContainer<IterativeTask> {
 
 	@BIGSParam
 	public Integer numberOfIterations;
@@ -38,27 +37,13 @@ public class IterativeTaskContainer extends TaskContainer {
 
 
 	@Override
-	public List<TaskContainer> generateMyTaskContainers() {
-		List<TaskContainer> r = new ArrayList<TaskContainer>();
+	public List<TaskContainer<IterativeTask>> generateMyConfiguredTaskContainers() {
+		List<TaskContainer<IterativeTask>> r = new ArrayList<TaskContainer<IterativeTask>>();
 		for (int i=1; i<= this.numberOfIterations; i++) {
-			TaskContainer tb = new IterativeTaskContainer(this.numberOfIterations, i);
+			TaskContainer<IterativeTask> tb = new IterativeTaskContainer(this.numberOfIterations, i);
 			r.add(tb);
 		}		
 		return r;		
-	}
-
-	@Override
-	public List<Class<? extends TaskContainer>> allowedTaskContainers() {
-		List<Class<? extends TaskContainer>> r = new ArrayList<Class<? extends TaskContainer>>();
-		r.add(TaskContainer.class);
-		return r;
-	}
-
-	@Override
-	public List<Class<? extends Task>> allowedTasks() {
-		 List<Class<? extends Task>> r = new  ArrayList<Class<? extends Task>>();
-		 r.add(IterativeTask.class);
-		 return r;
 	}
 
 	@Override
@@ -67,33 +52,29 @@ public class IterativeTaskContainer extends TaskContainer {
 	}
 
 	@Override
-	public TextSerializable processPreSubContainers(Task configuredTask, TextSerializable previousState) {
-		IterativeTask myTask = (IterativeTask)configuredTask;
-		TextSerializable resultingState = myTask.startIteration(previousState);
+	public TextSerializable processPreSubContainers(IterativeTask configuredTask, TextSerializable previousState) {
+		TextSerializable resultingState = configuredTask.startIteration(previousState);
 		return resultingState;
 	}
 
 	@Override
-	public TextSerializable processPostSubContainers(Task configuredTask, TextSerializable previousState) {
-		IterativeTask myTask = (IterativeTask)configuredTask;
-		TextSerializable resultingState = myTask.finalizeIteration(previousState);
+	public TextSerializable processPostSubContainers(IterativeTask configuredTask, TextSerializable previousState) {
+		TextSerializable resultingState = configuredTask.finalizeIteration(previousState);
 		return resultingState;
 	}
 	@Override
-	public void processPreDataBlock(Task configuredTask, TextSerializable previousState) {
-		IterativeTask myTask = (IterativeTask)configuredTask;
-		myTask.startDataBlock(previousState);
+	public void processPreDataBlock(IterativeTask configuredTask, TextSerializable previousState) {
+		configuredTask.startDataBlock(previousState);
 	}
 
 	@Override
-	public DataItem processDataItem(Task configuredTask, DataItem dataItem) {
+	public LLDDataItem processDataItem(IterativeTask configuredTask, LLDDataItem dataItem) {
 		return null;
 	}
 
 	@Override
-	public TextSerializable processPostDataBlock(Task configuredTask) {
-		IterativeTask myTask = (IterativeTask)configuredTask;
-		TextSerializable resultingState = myTask.finalizeDataBlock();
+	public TextSerializable processPostDataBlock(IterativeTask configuredTask) {
+		TextSerializable resultingState = configuredTask.finalizeDataBlock();
 		return resultingState;
 		
 	}
@@ -104,21 +85,19 @@ public class IterativeTaskContainer extends TaskContainer {
 	}
 
 	@Override
-	public TextSerializable processPreLoop(Task configuredTask, TextSerializable previousState) {
-		IterativeTask myTask = (IterativeTask)configuredTask;
-		TextSerializable resultingState = myTask.beforeAllIterations(previousState);
+	public TextSerializable processPreLoop(IterativeTask configuredTask, TextSerializable previousState) {
+		TextSerializable resultingState = configuredTask.beforeAllIterations(previousState);
 		return resultingState;	
 	}
 
 	@Override
-	public TextSerializable processPostLoop(Task configuredTask, List<TextSerializable> previousState) {
-		IterativeTask myTask = (IterativeTask)configuredTask;
-		TextSerializable resultingState = myTask.afterAllIterations(previousState);
+	public TextSerializable processPostLoop(IterativeTask configuredTask, List<TextSerializable> previousState) {
+		TextSerializable resultingState = configuredTask.afterAllIterations(previousState);
 		return resultingState;	
 	}
 
 	@Override
-	public List<String> getDataItemTags(DataItem tag) {
+	public List<String> getDataItemTags(LLDDataItem tag) {
 		// TODO Auto-generated method stub
 		return null;
 	}
