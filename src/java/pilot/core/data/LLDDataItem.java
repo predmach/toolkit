@@ -3,38 +3,36 @@ package pilot.core.data;
 import java.util.ArrayList;
 import java.util.List;
 
-import pilot.core.TextSerializable;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONValue;
 
 public class LLDDataItem implements DataItem {
 
 	List<List<Double>> data = new ArrayList<List<Double>>();
+
+	public List<List<Double>> getLLD() {
+		return this.data;
+	}
 	
-	public LLDDataItem(List<List<Double>> data) {
+	public void setLLD(List<List<Double>> data) {
 		this.data = data;
 	}
 	
-	public List<List<Double>> getData() {
-		return data;
-	}
-
 	@Override
 	public String toTextRepresentation() {
-		StringBuffer sb = new StringBuffer();
-		for (int i=0; i<data.size(); i++) {
-			List<Double> row = data.get(i);
-			for (Double d: row) {
-				sb.append(d).append(" ");
-			}
-			if (i!=data.size()-1) {
-				sb.append("; ");
-			}			
-		}
-		return sb.toString();
-		
+		String s = JSONValue.toJSONString(data);	
+		return s;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public void fromTextRepresentation(String textRepresentation) {
+		data = new ArrayList<List<Double>>();
+		JSONArray o = (JSONArray)JSONValue.parse(textRepresentation);
+		for (int i=0; i<o.size(); i++) {
+			List<Double> ll = (List<Double>)o.get(i);
+			data.add(ll);
+		}			
 	}
 
 }

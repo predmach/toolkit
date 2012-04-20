@@ -10,11 +10,13 @@ import org.json.simple.parser.ParseException;
 
 import bigs.api.core.BIGSParam;
 import bigs.api.exceptions.BIGSException;
+import pilot.core.State;
 import pilot.core.TaskContainer;
 import pilot.core.TextSerializable;
+import pilot.core.data.DataItem;
 import pilot.core.data.LLDDataItem;
 
-public class IterativeTaskContainer extends TaskContainer<IterativeTask> {
+public class IterativeTaskContainer extends TaskContainer<IterativeTask<State,DataItem,DataItem>> {
 
 	@BIGSParam
 	public Integer numberOfIterations;
@@ -37,10 +39,10 @@ public class IterativeTaskContainer extends TaskContainer<IterativeTask> {
 
 
 	@Override
-	public List<TaskContainer<IterativeTask>> generateMyConfiguredTaskContainers() {
-		List<TaskContainer<IterativeTask>> r = new ArrayList<TaskContainer<IterativeTask>>();
+	public List<TaskContainer<IterativeTask<State,DataItem,DataItem>>> generateMyConfiguredTaskContainers() {
+		List<TaskContainer<IterativeTask<State,DataItem,DataItem>>> r = new ArrayList<TaskContainer<IterativeTask<State,DataItem,DataItem>>>();
 		for (int i=1; i<= this.numberOfIterations; i++) {
-			TaskContainer<IterativeTask> tb = new IterativeTaskContainer(this.numberOfIterations, i);
+			TaskContainer<IterativeTask<State,DataItem,DataItem>> tb = new IterativeTaskContainer(this.numberOfIterations, i);
 			r.add(tb);
 		}		
 		return r;		
@@ -52,29 +54,29 @@ public class IterativeTaskContainer extends TaskContainer<IterativeTask> {
 	}
 
 	@Override
-	public TextSerializable processPreSubContainers(IterativeTask configuredTask, TextSerializable previousState) {
-		TextSerializable resultingState = configuredTask.startIteration(previousState);
+	public State processPreSubContainers(IterativeTask<State,DataItem,DataItem> configuredTask, State previousState) {
+		State resultingState = configuredTask.startIteration(previousState);
 		return resultingState;
 	}
 
 	@Override
-	public TextSerializable processPostSubContainers(IterativeTask configuredTask, TextSerializable previousState) {
-		TextSerializable resultingState = configuredTask.finalizeIteration(previousState);
+	public State processPostSubContainers(IterativeTask<State,DataItem,DataItem> configuredTask, State previousState) {
+		State resultingState = configuredTask.finalizeIteration(previousState);
 		return resultingState;
 	}
 	@Override
-	public void processPreDataBlock(IterativeTask configuredTask, TextSerializable previousState) {
+	public void processPreDataBlock(IterativeTask<State,DataItem,DataItem> configuredTask, State previousState) {
 		configuredTask.startDataBlock(previousState);
 	}
 
 	@Override
-	public LLDDataItem processDataItem(IterativeTask configuredTask, LLDDataItem dataItem) {
+	public  <D extends DataItem> D processDataItem(IterativeTask<State,DataItem,DataItem> configuredTask, D dataItem) {
 		return null;
 	}
 
 	@Override
-	public TextSerializable processPostDataBlock(IterativeTask configuredTask) {
-		TextSerializable resultingState = configuredTask.finalizeDataBlock();
+	public State processPostDataBlock(IterativeTask<State,DataItem,DataItem> configuredTask) {
+		State resultingState = configuredTask.finalizeDataBlock();
 		return resultingState;
 		
 	}
@@ -85,14 +87,14 @@ public class IterativeTaskContainer extends TaskContainer<IterativeTask> {
 	}
 
 	@Override
-	public TextSerializable processPreLoop(IterativeTask configuredTask, TextSerializable previousState) {
-		TextSerializable resultingState = configuredTask.beforeAllIterations(previousState);
+	public State processPreLoop(IterativeTask<State,DataItem,DataItem> configuredTask, State previousState) {
+		State resultingState = configuredTask.beforeAllIterations(previousState);
 		return resultingState;	
 	}
 
 	@Override
-	public TextSerializable processPostLoop(IterativeTask configuredTask, List<TextSerializable> previousState) {
-		TextSerializable resultingState = configuredTask.afterAllIterations(previousState);
+	public State processPostLoop(IterativeTask<State,DataItem,DataItem> configuredTask, List<State> previousState) {
+		State resultingState = configuredTask.afterAllIterations(previousState);
 		return resultingState;	
 	}
 

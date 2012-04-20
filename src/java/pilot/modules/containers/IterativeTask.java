@@ -2,25 +2,25 @@ package pilot.modules.containers;
 
 import java.util.List;
 
+import pilot.core.State;
 import pilot.core.Task;
-import pilot.core.TextSerializable;
-import pilot.core.data.LLDDataItem;
+import pilot.core.data.DataItem;
 
-public interface IterativeTask extends Task {
+public interface IterativeTask<S extends State, I extends DataItem, O extends DataItem> extends Task {
 	
-	public TextSerializable startIteration(TextSerializable previousState);
+	public S startIteration(S previousState);
 	
-	public TextSerializable finalizeIteration(TextSerializable previousState);
+	public S finalizeIteration(S previousState);
 	
-	public TextSerializable beforeAllIterations(TextSerializable previousState);
+	public S beforeAllIterations(S previousState);
 	
-	public TextSerializable afterAllIterations(List<TextSerializable> previousStates);
+	public S afterAllIterations(List<S> previousStates);
 	
-	public void startDataBlock(TextSerializable previousState);
+	public void startDataBlock(S previousState);
 	
-	public LLDDataItem processDataItem(LLDDataItem item);
+	public O processIterativeDataItem(I item);
 	
-	public TextSerializable finalizeDataBlock();
+	public S finalizeDataBlock();
 	
 	
 }

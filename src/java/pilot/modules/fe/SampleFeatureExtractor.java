@@ -9,10 +9,11 @@ import pilot.core.Task;
 import pilot.core.TaskContainer;
 import pilot.core.TextSerializable;
 import pilot.core.data.LLDDataItem;
+import pilot.core.data.RawDataItem;
 import pilot.modules.containers.DataPartitionTask;
 import pilot.modules.containers.DataPartitionTaskContainer;
 
-public class SampleFeatureExtractor implements DataPartitionTask {
+public class SampleFeatureExtractor implements DataPartitionTask<RawDataItem, LLDDataItem> {
 
 	@BIGSParam
 	public Integer numberOfSplits = 1;
@@ -29,8 +30,8 @@ public class SampleFeatureExtractor implements DataPartitionTask {
 	}
 
 	@Override
-	public List<TaskContainer<?>> getTaskContainerCascade() {
-		List<TaskContainer<?>> r = new ArrayList<TaskContainer<?>>();
+	public List<TaskContainer<? extends Task>> getTaskContainerCascade() {
+		List<TaskContainer<? extends Task>> r = new ArrayList<TaskContainer<? extends Task>>();
 		r.add(new DataPartitionTaskContainer(numberOfSplits));
 		
 		return r;
@@ -57,12 +58,6 @@ public class SampleFeatureExtractor implements DataPartitionTask {
 	}
 
 	@Override
-	public LLDDataItem processDataItem(LLDDataItem item) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
 	public TextSerializable finalizePartition() {
 		// TODO Auto-generated method stub
 		return null;
@@ -78,6 +73,12 @@ public class SampleFeatureExtractor implements DataPartitionTask {
 	@Override
 	public TextSerializable afterProcessingAllPartitions(
 			List<TextSerializable> previousStates) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public LLDDataItem processPartitionDataItem(RawDataItem item) {
 		// TODO Auto-generated method stub
 		return null;
 	}

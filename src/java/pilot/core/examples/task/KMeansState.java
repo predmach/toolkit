@@ -8,9 +8,10 @@ import org.json.simple.parser.ParseException;
 
 import bigs.api.exceptions.BIGSException;
 
+import pilot.core.State;
 import pilot.core.TextSerializable;
 
-public class KMeansState implements TextSerializable {
+public class KMeansState implements State {
 
 	public Double value = 0D;
 	

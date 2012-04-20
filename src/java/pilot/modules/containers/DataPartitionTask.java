@@ -2,24 +2,25 @@ package pilot.modules.containers;
 
 import java.util.List;
 
+import pilot.core.State;
 import pilot.core.Task;
 import pilot.core.TextSerializable;
-import pilot.core.data.LLDDataItem;
+import pilot.core.data.DataItem;
 
-public interface DataPartitionTask extends Task {
+public interface DataPartitionTask<S extends State, I extends DataItem, O extends DataItem> extends Task {
 
-	public TextSerializable beforeProcessingPartitionSubContainers(TextSerializable previousState);
+	public S beforeProcessingPartitionSubContainers(S previousState);
 	
-	public TextSerializable afterProcessingPartitionSubContainers(TextSerializable previousState);
+	public S afterProcessingPartitionSubContainers(S previousState);
 	
-	public void startPartition(TextSerializable previousState);
+	public void startPartition(S previousState);
 		
-	public LLDDataItem processDataItem(LLDDataItem item);
+	public O processPartitionDataItem(I item);
 	
-	public TextSerializable finalizePartition();
+	public S finalizePartition();
 	
-	public TextSerializable beforeProcessingAllPartitions(TextSerializable previousState);
+	public S beforeProcessingAllPartitions(S previousState);
 	
-	public TextSerializable afterProcessingAllPartitions(List<TextSerializable> previousStates);
+	public S afterProcessingAllPartitions(List<S> previousStates);
 	
 }

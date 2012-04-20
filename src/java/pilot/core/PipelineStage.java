@@ -16,7 +16,7 @@ public class PipelineStage {
 	public static String lprefix = "stage";
 	
 	Integer stageNumber = 1;
-	TaskContainer topLevelContainer = new TopLevelTaskContainer(this);
+	TaskContainer<? extends Task> topLevelContainer = new TopLevelTaskContainer(this);
 	Task configuredTask;
 	Pipeline pipeline;
 
@@ -44,21 +44,21 @@ public class PipelineStage {
 		return this.stageNumber;
 	}
 
-	List<TaskContainer<Task>> generateTaskContainers (List<TaskContainer<Task>> containerCascade, Integer level) {
-		List<TaskContainer<Task>> r = new ArrayList<TaskContainer<Task>>();
+	List<TaskContainer<? extends Task>> generateTaskContainers (List<TaskContainer<? extends Task>> containerCascade, Integer level) {
+		List<TaskContainer<? extends Task>> r = new ArrayList<TaskContainer<? extends Task>>();
 
 		if (level>=containerCascade.size()) {
 			return r;
 		}
 		
-		TaskContainer<Task> container = containerCascade.get(level);
+		TaskContainer<? extends Task> container = containerCascade.get(level);
 
-		for (TaskContainer<Task> tc: container.generateMyConfiguredTaskContainers()) {
+		for (TaskContainer<? extends Task> tc: container.generateMyConfiguredTaskContainers()) {
 			r.add(tc);
 			tc.setPipelineStage(this);
-			List<TaskContainer<Task>> subContainers = this.generateTaskContainers(containerCascade, level+1);				
+			List<TaskContainer<? extends Task>> subContainers = this.generateTaskContainers(containerCascade, level+1);				
 			if (subContainers!=null) {
-				for (TaskContainer<Task> stc: subContainers) {
+				for (TaskContainer<? extends Task> stc: subContainers) {
 					tc.addTaskContainer(stc);
 				}
 			}
@@ -70,12 +70,12 @@ public class PipelineStage {
 	void generateTaskContainerCascade() {
 
 			this.topLevelContainer = new TopLevelTaskContainer(this);
-			List<TaskContainer<Task>> containerCascade = this.configuredTask.getTaskContainerCascade();
+			List<TaskContainer<? extends Task>> containerCascade = this.configuredTask.getTaskContainerCascade();
 
-			List<TaskContainer<Task>> configuredContainers = this.generateTaskContainers(containerCascade,0);
+			List<TaskContainer<? extends Task>> configuredContainers = this.generateTaskContainers(containerCascade,0);
 			
 			
-			for (TaskContainer<?> c: configuredContainers) {
+			for (TaskContainer<? extends Task> c: configuredContainers) {
 				this.topLevelContainer.addTaskContainer(c);
 			}
 			

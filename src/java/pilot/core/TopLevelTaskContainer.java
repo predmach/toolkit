@@ -2,6 +2,7 @@ package pilot.core;
 
 import java.util.List;
 
+import pilot.core.data.DataItem;
 import pilot.core.data.LLDDataItem;
 
 public class TopLevelTaskContainer extends TaskContainer<Task> {
@@ -25,37 +26,37 @@ public class TopLevelTaskContainer extends TaskContainer<Task> {
 	}
 
 	@Override
-	public TextSerializable processPreSubContainers(Task configuredTask, TextSerializable previousState) {
+	public State processPreSubContainers(Task configuredTask, State previousState) {
 		return null;
 	}
 
 	@Override
-	public TextSerializable processPostSubContainers(Task configuredTask, TextSerializable previousState) {
+	public State processPostSubContainers(Task configuredTask, State previousState) {
 		return null;
 	}
 
 	@Override
-	public TextSerializable processPreLoop(Task configuredTask, TextSerializable previousState) {
+	public State processPreLoop(Task configuredTask, State previousState) {
 		return null;
 	}
 
 	@Override
-	public TextSerializable processPostLoop(Task configuredTask, List<TextSerializable> previousState) {
+	public State processPostLoop(Task configuredTask, List<State> previousState) {
 		return null;
 	}
 
 	@Override
-	public void processPreDataBlock(Task configuredTask, TextSerializable previousState) {
+	public void processPreDataBlock(Task configuredTask, State previousState) {
 		
 	}
 
 	@Override
-	public LLDDataItem processDataItem(Task configuredTask, LLDDataItem dataItem) {
+	public DataItem processDataItem(Task configuredTask, DataItem dataItem) {
 		return null;
 	}
 
 	@Override
-	public TextSerializable processPostDataBlock(Task configuredTask) {
+	public State processPostDataBlock(Task configuredTask) {
 		return null;
 		
 	}

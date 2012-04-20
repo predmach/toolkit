@@ -13,14 +13,14 @@ import bigs.api.exceptions.BIGSException;
 import bigs.core.utils.Log;
 import pilot.core.Task;
 import pilot.core.TaskContainer;
-import pilot.core.TextSerializable;
+import pilot.core.data.DataItem;
 import pilot.core.data.LLDDataItem;
 import pilot.modules.containers.DataPartitionTask;
 import pilot.modules.containers.DataPartitionTaskContainer;
 import pilot.modules.containers.IterativeTask;
 import pilot.modules.containers.IterativeTaskContainer;
 
-public class KMeans implements DataPartitionTask, IterativeTask {
+public class KMeans implements DataPartitionTask<KMeansState, LLDDataItem, LLDDataItem>, IterativeTask<KMeansState, DataItem, DataItem> {
 
 	@BIGSParam
 	public Integer numberOfCentroids;
@@ -63,15 +63,13 @@ public class KMeans implements DataPartitionTask, IterativeTask {
 	}	
 	
 	@Override
-	public List<TaskContainer<Task>> getTaskContainerCascade() {
-		List<TaskContainer<Task>> r = new ArrayList<TaskContainer<Task>>();
+	public List<TaskContainer<? extends Task>> getTaskContainerCascade() {
+		List<TaskContainer<? extends Task>> r = new ArrayList<TaskContainer<? extends Task>>();
 		r.add(new IterativeTaskContainer(numberOfIterations));
 		r.add(new DataPartitionTaskContainer(numberOfPartitions));
-		
 		return r;
-	}
+	}	
 
-	
 	/** -------------------------------------------------------------------
 
 	      Methods for IterativeTaskContainer
@@ -79,61 +77,48 @@ public class KMeans implements DataPartitionTask, IterativeTask {
 	    -------------------------------------------------------------------*/
 
 	@Override
-	public TextSerializable startIteration(TextSerializable previousState) {
-		Log.debug(this.getClass().getName()+" "+Thread.currentThread().getStackTrace()[1].getMethodName());
-		
-		KMeansState s = (KMeansState)previousState;
-		s.value = s.value +1D;
-
-		Log.debug(s.toTextRepresentation());
-		return s;
+	public KMeansState startIteration(KMeansState previousState) {	
+		previousState.value = previousState.value +1D;
+		return previousState;
 	}
 
 
 	@Override
-	public TextSerializable finalizeIteration(TextSerializable previousState) {
-		Log.debug(this.getClass().getName()+" "+Thread.currentThread().getStackTrace()[1].getMethodName());
-		KMeansState s = (KMeansState)previousState;
-		s.value = s.value/5.0D;
-		return s;
+	public KMeansState finalizeIteration(KMeansState previousState) {
+		previousState.value = previousState.value/5.0D;
+		return previousState;
 	}
 
 
 	@Override
-	public TextSerializable beforeAllIterations(TextSerializable previousState) {
-		Log.debug(this.getClass().getName()+" "+Thread.currentThread().getStackTrace()[1].getMethodName());
-		
-		KMeansState s = new KMeansState();
-		s.value = 1D;
-		return s;
+	public KMeansState beforeAllIterations(KMeansState previousState) {
+		previousState.value = 1D;
+		return previousState;
 	}
 
 	@Override
-	public TextSerializable afterAllIterations(
-			List<TextSerializable> previousStates) {
+	public KMeansState afterAllIterations(List<KMeansState> previousStates) {
 		
 		if (previousStates.size()!=1) {
 			throw new BIGSException("expecting only one iteration state in sequential process");
 		}
 		
-		KMeansState k = (KMeansState)previousStates.get(0);
+		KMeansState k = previousStates.get(0);
 		k.value = k.value/6D;
 		Log.info("---> FINAL STATE "+k.toTextRepresentation());
 		return k;
 	}
 
 
+	
 	@Override
-	public void startDataBlock(TextSerializable previousState) {
-		Log.debug(this.getClass().getName()+" "+Thread.currentThread().getStackTrace()[1].getMethodName());
-	}
-
+	public void startDataBlock(KMeansState previousState) {}
 
 	@Override
-	public TextSerializable finalizeDataBlock() {
-		Log.debug(this.getClass().getName()+" "+Thread.currentThread().getStackTrace()[1].getMethodName());
-		return null;
-	}
+	public DataItem processIterativeDataItem(DataItem item) { return null; }
+
+	@Override
+	public KMeansState finalizeDataBlock() { return null; }
 
 
 	/** -------------------------------------------------------------------
@@ -144,63 +129,51 @@ public class KMeans implements DataPartitionTask, IterativeTask {
 
 	KMeansState partitionState = new KMeansState();
 	@Override
-	public void startPartition(TextSerializable previousState) {
-		Log.debug(this.getClass().getName()+" "+Thread.currentThread().getStackTrace()[1].getMethodName());		
-		partitionState.value = ((KMeansState)previousState).value*3;
+	public void startPartition(KMeansState previousState) {
+		partitionState.value = previousState.value*3;
 	}
 
 
 	@Override
-	public TextSerializable finalizePartition() {
-		Log.debug(this.getClass().getName()+" "+Thread.currentThread().getStackTrace()[1].getMethodName());
+	public KMeansState finalizePartition() {
 		partitionState.value = partitionState.value*4;
 		return partitionState;
 	}
 
 
 	@Override
-	public TextSerializable beforeProcessingAllPartitions(
-			TextSerializable previousState) {
-		Log.debug(this.getClass().getName()+" "+Thread.currentThread().getStackTrace()[1].getMethodName());
-		KMeansState s = (KMeansState)previousState;
-		s.value = s.value + 2;
-		return s;
+	public KMeansState beforeProcessingAllPartitions(KMeansState previousState) {
+		previousState.value = previousState.value + 2;
+		return previousState;
 	}
 
 
 	@Override
-	public TextSerializable afterProcessingAllPartitions(
-			List<TextSerializable> previousStates) {
-		Log.debug(this.getClass().getName()+" "+Thread.currentThread().getStackTrace()[1].getMethodName());
-		Log.debug(this.getClass().getName()+" "+Thread.currentThread().getStackTrace()[1].getMethodName());
+	public KMeansState afterProcessingAllPartitions(List<KMeansState> previousStates) {
 		KMeansState s = new KMeansState();
 		s.value=0D;
-		for (TextSerializable p: previousStates) {
-			s.value = s.value + ((KMeansState)p).value;
+		for (KMeansState p: previousStates) {
+			s.value = s.value + p.value;
 		}
 		return s;
 	}
 
 	@Override
-	public TextSerializable beforeProcessingPartitionSubContainers(
-			TextSerializable previousState) {
-		Log.debug(this.getClass().getName()+" "+Thread.currentThread().getStackTrace()[1].getMethodName());
+	public KMeansState beforeProcessingPartitionSubContainers(KMeansState previousState) {
 		return null;
 	}
 
 
 	@Override
-	public TextSerializable afterProcessingPartitionSubContainers(
-			TextSerializable previousState) {
-		Log.debug(this.getClass().getName()+" "+Thread.currentThread().getStackTrace()[1].getMethodName());
+	public KMeansState afterProcessingPartitionSubContainers(KMeansState previousState) {
 		return null;
 	}
 
 	@Override
-	public LLDDataItem processDataItem(LLDDataItem item) {
+	public LLDDataItem processPartitionDataItem(LLDDataItem item) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	
+
 }

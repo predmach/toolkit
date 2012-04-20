@@ -4,6 +4,7 @@ import java.util.List;
 
 import pilot.core.Schedule;
 import pilot.core.ScheduleItem;
+import pilot.core.State;
 import pilot.core.Task;
 import pilot.core.TaskContainer;
 import pilot.core.TextSerializable;
@@ -142,13 +143,13 @@ public class Worker {
 				throw new BIGSException("schedule item "+scheduleItem.toString()+" can only have one parent and it has "+parentsIds.size());
 			}
 	
-			TextSerializable previousState = null;
+			State previousState = null;
 			
 			Integer parentId = null;
 			if (parentsIds.size()>0) parentId = parentsIds.get(0);
 			if (parentId!=null) previousState = schedule.get(parentId).getProcessState();
 			
-			TextSerializable resultState = null;
+			State resultState = null;
 			
 			
 			if (methodName.equals("preSubContainers")) {				
@@ -176,7 +177,7 @@ public class Worker {
 				}
 			}
 			
-			TextSerializable resultState = configuredContainer.processPostLoop(configuredTask, parentsStates);
+			State resultState = configuredContainer.processPostLoop(configuredTask, parentsStates);
 			scheduleItem.setProcessState(resultState);
 		}
 		

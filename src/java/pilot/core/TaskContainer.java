@@ -5,20 +5,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import pilot.core.data.DataItem;
 import pilot.core.data.LLDDataItem;
-import pilot.testing.GenericDataType;
 
 import bigs.api.core.BIGSParam;
 import bigs.api.core.Configurable;
 import bigs.api.exceptions.BIGSException;
 import bigs.core.exceptions.BIGSPropertyNotFoundException;
 import bigs.core.utils.Core;
-import bigs.core.utils.Log;
 import bigs.core.utils.Text;
 
 public abstract class TaskContainer<T extends Task> implements Configurable, TextSerializable {
 
-	List<TaskContainer<Task>> taskContainers = new ArrayList<TaskContainer<Task>>();
+	List<TaskContainer<? extends Task>> taskContainers = new ArrayList<TaskContainer<? extends Task>>();
 
 	TaskContainer<? extends Task> parentTaskContainer = null;
 	
@@ -29,34 +28,33 @@ public abstract class TaskContainer<T extends Task> implements Configurable, Tex
 	public abstract Boolean supportsParallelization();
 	
 	public abstract List<String> getDataItemTags(LLDDataItem tag);
-
 	
-	public abstract TextSerializable processPreSubContainers(T configuredTask, TextSerializable previousState);
+	public abstract State processPreSubContainers(T configuredTask, State previousState);
 	
-	public abstract TextSerializable processPostSubContainers(T configuredTask, TextSerializable previousState);
+	public abstract State processPostSubContainers(T configuredTask, State previousState);
 		
 	
-	public abstract TextSerializable processPreLoop(T configuredTask, TextSerializable previousState);
+	public abstract State processPreLoop(T configuredTask, State previousState);
 	
-	public abstract TextSerializable processPostLoop(T configuredTask, List<TextSerializable> previousStates);	
+	public abstract State processPostLoop(T configuredTask, List<State> previousStates);	
 
 	/**
 	 * returs void because pre-process-post all run within the same process and, thus, 
 	 * only post needs to return a state for the framework to handle
 	 * @param previousState
 	 */
-	public abstract void processPreDataBlock(T configuredTask, TextSerializable previousState);
+	public abstract void processPreDataBlock(T configuredTask, State previousState);
 	
-	public abstract LLDDataItem processDataItem(T configuredTask, LLDDataItem dataItem);
+	public abstract <D extends DataItem> D processDataItem(T configuredTask, D dataItem);
 
-	public abstract TextSerializable processPostDataBlock(T configuredTask);
+	public abstract State processPostDataBlock(T configuredTask);
 			
 	
-	public List<TaskContainer<Task>> getTaskContainers() {
+	public List<TaskContainer<? extends Task>> getTaskContainers() {
 		return taskContainers;
 	}
 		
-	public void addTaskContainer(TaskContainer<Task> taskContainer) {
+	public void addTaskContainer(TaskContainer<? extends Task> taskContainer) {
 		taskContainers.add(taskContainer);
 		taskContainer.setParentTaskContainer(this);
 		taskContainer.setPipelineStage(this.getPipelineStage());
@@ -82,7 +80,7 @@ public abstract class TaskContainer<T extends Task> implements Configurable, Tex
 
 		System.out.println(prefix+this.toString());
 		if (!this.taskContainers.isEmpty()) {
-			for (TaskContainer<Task> tb: this.taskContainers) {
+			for (TaskContainer<? extends Task> tb: this.taskContainers) {
 				tb.printOut(prefix+"     ");
 			}
 		} 
@@ -102,14 +100,14 @@ public abstract class TaskContainer<T extends Task> implements Configurable, Tex
 			ScheduleItem p1 = new ScheduleItem(schedule, this, pipelineStage.configuredTask, "preSubContainers");
 			if (parentScheduleItem!=null) p1.addParentId(parentScheduleItem.getId());
 
-			TaskContainer<Task> th = this.taskContainers.get(0).clone();
+			TaskContainer<? extends Task> th = this.taskContainers.get(0).clone();
 			ScheduleItem p2 = new ScheduleItem(schedule, th, pipelineStage.configuredTask,  "preLoop").addParentId(p1.getId());
 
 			List<Integer> subContainerParentsIds = new ArrayList<Integer>();
 			if (this.taskContainers.size()>0) {
 				Boolean isParallel = th.supportsParallelization();
 				ScheduleItem parent = p2;
-				for (TaskContainer<Task> tb: this.taskContainers) {
+				for (TaskContainer<? extends Task> tb: this.taskContainers) {
 					ScheduleItem item = tb.fillSchedule(schedule, parent);
 					if (isParallel) {
 						subContainerParentsIds.add(item.getId());

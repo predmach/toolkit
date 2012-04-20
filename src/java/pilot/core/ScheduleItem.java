@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+
 import org.apache.hadoop.hbase.util.Bytes;
 
 import bigs.api.core.BIGSParam;
@@ -20,6 +21,9 @@ import bigs.core.BIGS;
 import bigs.core.utils.Core;
 import bigs.core.utils.Data;
 import bigs.core.utils.Text;
+
+
+import pilot.core.data.DataItem;
 
 public class ScheduleItem {
 	
@@ -49,11 +53,11 @@ public class ScheduleItem {
 	String hostnameStored = "";
 
 	Task configuredTask;
-	TaskContainer configuredTaskContainer;
+	TaskContainer<Task> configuredTaskContainer;
 	
 	Integer status = ScheduleItem.STATUS_PENDING;
 	
-	TextSerializable processState;
+	State processState;
 	
 	public ScheduleItem() {}
 	
@@ -62,7 +66,7 @@ public class ScheduleItem {
 		schedule.addItem(this);
 	}
 				
-	public ScheduleItem (Schedule schedule, TaskContainer configuredTaskContainer, Task configuredTask, String methodName) {
+	public ScheduleItem (Schedule schedule, TaskContainer<Task> configuredTaskContainer, Task configuredTask, String methodName) {
 		this(schedule);
 		this.configuredTask = configuredTask;
 		this.methodName = methodName;
@@ -81,11 +85,11 @@ public class ScheduleItem {
 		return schedule;
 	}
 	
-	public TextSerializable getProcessState() {
+	public State getProcessState() {
 		return this.processState;
 	}
 	
-	public void setProcessState(TextSerializable processState) {
+	public void setProcessState(State processState) {
 		this.processState = processState;
 	}
 	
@@ -313,7 +317,7 @@ public class ScheduleItem {
 					throw new BIGSException("state object for rowkey "+result.getRowKey()+" is not "+TextSerializable.class.getSimpleName());
 				}
 				
-				TextSerializable processState = (TextSerializable)obj;
+				State processState = (State)obj;
 				byte[] sprocessStateObject = result.getValue("content", "data");		
 				if (sprocessStateObject!=null) {
 					processState.fromTextRepresentation(new String(sprocessStateObject));
