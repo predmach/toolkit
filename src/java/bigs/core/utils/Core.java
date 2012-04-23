@@ -65,45 +65,45 @@ public class Core {
 	 * @throws BIGSPropertyNotFoundException 
 	 */
  	@SuppressWarnings({ "unchecked", "rawtypes" })
-	static public <T extends Configurable> T getConfiguredObject(String classPropertyName, Class<T> parentClass, Properties properties, String propertiesPrefix) throws BIGSPropertyNotFoundException {
+	static public <T extends Configurable> T getPreparedObject(String classPropertyName, Class<T> parentClass, Properties properties, String propertiesPrefix) throws BIGSPropertyNotFoundException {
 
  		String propertyName = propertiesPrefix+"."+classPropertyName;
-		String configurableObjectClassName = properties.getProperty(propertyName);		
-		if (configurableObjectClassName==null) {
+		String preparedObjectClassName = properties.getProperty(propertyName);		
+		if (preparedObjectClassName==null) {
 			throw new BIGSPropertyNotFoundException("property "+propertyName);
 		}
-		configurableObjectClassName = configurableObjectClassName.trim();
+		preparedObjectClassName = preparedObjectClassName.trim();
 		try {
-			if (configurableObjectClassName==null) {
+			if (preparedObjectClassName==null) {
 				throw new BIGSException("definition for "+propertiesPrefix+"."+classPropertyName+" not found");
 			}
 			
-			Class<?> configurableObjectClass = Class.forName(configurableObjectClassName);
-			T configurableObject = (T)configurableObjectClass.newInstance();
+			Class<?> preparedObjectClass = Class.forName(preparedObjectClassName);
+			T preparedObject = (T)preparedObjectClass.newInstance();
 			
-			for (Field field: configurableObjectClass.getFields()) {
+			for (Field field: preparedObjectClass.getFields()) {
 				if (field.isAnnotationPresent(BIGSParam.class)) {
 					// sets the value from the properties
-					String propName = propertiesPrefix+"."+configurableObjectClass.getSimpleName()+"."+field.getName();
+					String propName = propertiesPrefix+"."+preparedObjectClass.getSimpleName()+"."+field.getName();
 					String paramSValue = properties.getProperty(propName);
 					BIGSParam annotation = field.getAnnotation(BIGSParam.class);
 					if (paramSValue==null && annotation.isMandatory()) {
-						throw new BIGSException("no values defined for param "+field.getName()+ " in configuration for class "+configurableObjectClassName+" through property name "+propName);
+						throw new BIGSException("no values defined for param "+field.getName()+ " in configuration for class "+preparedObjectClassName+" through property name "+propName);
 					}
 					if (paramSValue!=null) {
 						Class<?> fieldClass = field.getType();
 						Object value = Text.parseObject(paramSValue, fieldClass);
-						field.set(configurableObject, value);
+						field.set(preparedObject, value);
 					}
 				}				
 			}
-			return configurableObject;
+			return preparedObject;
 		} catch (ClassNotFoundException e) {
-			throw new BIGSException("class "+configurableObjectClassName+" (or its configuration) not found");
+			throw new BIGSException("class "+preparedObjectClassName+" (or its configuration) not found");
 		} catch (InstantiationException e) {
-			throw new BIGSException("instantiation exception for "+configurableObjectClassName+" (or its configuration, check it has an empty constructor) and parent class "+parentClass.getSimpleName()+". "+e.getMessage());
+			throw new BIGSException("instantiation exception for "+preparedObjectClassName+" (or its configuration, check it has an empty constructor) and parent class "+parentClass.getSimpleName()+". "+e.getMessage());
 		} catch (IllegalAccessException e) {
-			throw new BIGSException("illegal access exception for "+configurableObjectClassName+" (or its configuration). "+e.getMessage());
+			throw new BIGSException("illegal access exception for "+preparedObjectClassName+" (or its configuration). "+e.getMessage());
 		}
  	}
 	
@@ -115,17 +115,17 @@ public class Core {
  	 * @return
  	 */
  	@SuppressWarnings({ "unchecked", "rawtypes" })
-	static public <T extends Configurable> T getConfiguredObject(String className, Class<T> parentClass, Map<String, String> fieldValues) {
+	static public <T extends Configurable> T getPreparedObject(String className, Class<T> parentClass, Map<String, String> fieldValues) {
  		 
 		try {
 			if (className==null) {
 				throw new BIGSException("cannot create an instance from a NULL class name");
 			}
 			
-			Class<?> configurableObjectClass = Class.forName(className.trim());
-			T configurableObject = (T)configurableObjectClass.newInstance();
+			Class<?> preparedObjectClass = Class.forName(className.trim());
+			T preparedObject = (T)preparedObjectClass.newInstance();
 			
-			for (Field field: configurableObjectClass.getFields()) {
+			for (Field field: preparedObjectClass.getFields()) {
 				if (field.isAnnotationPresent(BIGSParam.class)) {
 					// sets the value from the Map
 					String paramSValue = fieldValues.get(field.getName());
@@ -136,11 +136,11 @@ public class Core {
 					if (paramSValue!=null) {
 	 					Class<?> fieldClass = field.getType();
 						Object value = Text.parseObject(paramSValue, fieldClass);
-						field.set(configurableObject, value);
+						field.set(preparedObject, value);
 					}
 				}				
 			}
-			return configurableObject;
+			return preparedObject;
 		} catch (ClassNotFoundException e) {
 			throw new BIGSException("class "+className+" (or its configuration) not found");
 		} catch (InstantiationException e) {
@@ -164,7 +164,7 @@ public class Core {
 	 * @return the configured objects list
 	 */
 	@SuppressWarnings({"unchecked", "rawtypes"})
-	static public <T extends Configurable> List<T> getConfiguredObjectList(String classPropertyName, Class<T> parentClass, Properties properties, String propertiesPrefix) {
+	static public <T extends Configurable> List<T> getPreparedObjectList(String classPropertyName, Class<T> parentClass, Properties properties, String propertiesPrefix) {
 		String className = properties.getProperty(propertiesPrefix+"."+classPropertyName).trim();
 
 		if (className==null) {
@@ -172,7 +172,7 @@ public class Core {
 		}
 		try {
 			Class<?> c = Class.forName(className);
-			List<T> configuredInstances = new ArrayList<T>();
+			List<T> preparedInstances = new ArrayList<T>();
 			Boolean isAnyFieldAnnotated = false;
 			for (Field field: c.getFields()) {
 				if (field.isAnnotationPresent(BIGSParam.class)) {
@@ -191,13 +191,13 @@ public class Core {
 						List<?> values = Text.parseObjectList(paramList, ":", fieldClass);
 						
 						// if empty insert an initial empty object
-						if (configuredInstances.isEmpty()) {
+						if (preparedInstances.isEmpty()) {
 							T initialDummy = (T)c.newInstance();	
-							configuredInstances.add(initialDummy);
+							preparedInstances.add(initialDummy);
 						}
 						// clone and create instances and inject the field value
 						List<T> newConfiguredInstances = new ArrayList<T>();
-						for (T instance: configuredInstances) {
+						for (T instance: preparedInstances) {
 							for (Object v: values) {
 								T clonedInstance = (T)c.newInstance();
 								for (Field f: c.getFields()) {
@@ -210,7 +210,7 @@ public class Core {
 							}
 						}
 						
-						configuredInstances = newConfiguredInstances;
+						preparedInstances = newConfiguredInstances;
 					}
 				}
 				
@@ -220,10 +220,10 @@ public class Core {
 			// configuration parameters and needs no configuration. In this case 
 			// simply add a new instance to the list
 			if (!isAnyFieldAnnotated) {
-				configuredInstances.add((T)c.newInstance());
+				preparedInstances.add((T)c.newInstance());
 			}
 			
-			return configuredInstances;
+			return preparedInstances;
 			
 		} catch (ClassNotFoundException e) {
 			throw new BIGSException("class not found "+className);

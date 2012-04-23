@@ -30,7 +30,7 @@ public class DownloadFiles extends Command {
 		File destinationDir = new File(".");
 		if (args.length==2)  destinationDir = new File(args[1]);
 		
-    	DataSource dataSource = BIGS.globalProperties.getConfiguredDataSource();
+    	DataSource dataSource = BIGS.globalProperties.getPreparedDataSource();
     	
     	Table table = dataSource.getTable(tableName);
     	ResultScanner scanner = table.getScan(table.createScanObject());

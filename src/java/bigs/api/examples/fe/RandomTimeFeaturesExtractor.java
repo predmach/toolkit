@@ -1,4 +1,4 @@
-package bigs.api.examples;
+package bigs.api.examples.fe;
 
 import java.util.ArrayList;
 import java.util.List;

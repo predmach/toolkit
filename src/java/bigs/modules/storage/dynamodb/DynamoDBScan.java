@@ -77,7 +77,7 @@ public class DynamoDBScan implements Scan {
 	}
 
 	@Override
-	public void setFilterByColumnValue(String columnFamily, String columnName,
+	public void addFilterByColumnValue(String columnFamily, String columnName,
 			byte[] value) {
 
 		filters.put(columnFamily+":"+columnName, new String(value));

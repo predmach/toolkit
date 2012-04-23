@@ -6,7 +6,7 @@ import java.io.FileReader;
 import java.io.IOException;
 
 import bigs.api.exceptions.BIGSException;
-import bigs.core.explorations.Pipeline;
+import bigs.core.pipelines.Pipeline;
 import bigs.core.utils.Log;
 
 

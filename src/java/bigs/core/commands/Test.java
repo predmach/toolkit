@@ -10,12 +10,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import pilot.core.PipelineStage;
-import pilot.core.Schedule;
-import pilot.core.ScheduleItem;
-import pilot.core.examples.task.KMeans;
 
 import bigs.api.core.Algorithm;
+import bigs.api.examples.task.IterateAndSplit;
 import bigs.api.exceptions.BIGSException;
 import bigs.api.storage.DataSource;
 import bigs.api.storage.Get;
@@ -25,9 +22,11 @@ import bigs.api.storage.ResultScanner;
 import bigs.api.storage.Scan;
 import bigs.api.storage.Table;
 import bigs.core.BIGS;
-import bigs.core.explorations.Evaluation;
-import bigs.core.explorations.Pipeline;
-import bigs.core.explorations.ExplorationStage;
+import bigs.core.data.DataItem;
+import bigs.core.pipelines.Pipeline;
+import bigs.core.pipelines.PipelineStage;
+import bigs.core.pipelines.Schedule;
+import bigs.core.pipelines.ScheduleItem;
 import bigs.core.utils.Log;
 import bigs.core.utils.Text;
 import bigs.modules.storage.dynamodb.DynamoDBDataSource;
@@ -78,18 +77,56 @@ public class Test extends Command {
     }
     
     void testGenerics(String[] args) {
-    	pilot.testing.Test.run();
+    	this.testMultiFileer(args);
+    }
+    
+    void testMultiFileer(String[] args) {
+    	Pipeline pipeline = Pipeline.fromPipelineNumber(new Integer(args[0]));
+    	PipelineStage stage = pipeline.getStages().get(0);
+    	
+		DataSource inputDataSource    = stage.getPreparedInputDataSource();
+		String     inputDataTableName = stage.getInputTableName();
+		Table 	   inputTable = inputDataSource.getTable(inputDataTableName);
+				
+		Scan scan = inputTable.createScanObject();
+		for (String family: DataItem.dataTableColumnFamilies) {
+			scan.addFamily(family);
+		}
+
+		Map<String, String> tags = new HashMap<String, String>();
+		tags.put("00003.00001|IterativeTaskContainer|iteration", "1");
+		tags.put("00003.00001|DataPartitionTaskContainer|partition", "1");
+		
+		if (tags!=null) {
+			Log.debug("worker on data items with tag");
+			for (String tagName: tags.keySet()) {
+				String tagValue = tags.get(tagName);
+				scan.addFilterByColumnValue("tags", tagName, tags.get(tagName).getBytes());
+				Log.debug("adding filter "+tagName+" = "+tagValue);						
+			}					
+		}
+		
+		ResultScanner rs = inputTable.getScan(scan);
+		
+		try {
+			for (Result rr = rs.next(); rr!=null; rr = rs.next()) {						
+				Log.info("      input  rowkey "+rr.getRowKey());
+			}
+		} finally {
+			rs.close();
+		}
+    	
+    	
     }
     
     void testTextSerializable(String[] args) {
-    	KMeans k = new KMeans();
-    	k.numberOfCentroids = 3;
+    	IterateAndSplit k = new IterateAndSplit();
     	k.numberOfIterations = 4;
     	k.numberOfPartitions = 5;
     	
     	System.out.println(k.toTextRepresentation());
     	
-    	KMeans k2 = new KMeans();
+    	IterateAndSplit k2 = new IterateAndSplit();
     	k2.fromTextRepresentation(k.toTextRepresentation());
     	System.out.println(k2.toTextRepresentation());
     }
@@ -152,7 +189,7 @@ System.out.println();
     
     void testDynamo(String[] args) throws Exception {
     	if (args.length==0) throw new BIGSException("must specify extra args");
-    	DynamoDBDataSource d = (DynamoDBDataSource)BIGS.globalProperties.getConfiguredDataSource();
+    	DynamoDBDataSource d = (DynamoDBDataSource)BIGS.globalProperties.getPreparedDataSource();
     	String tableName = "test-table";
     	
     	if (args[0].equals("create.table")) {
@@ -205,30 +242,7 @@ System.out.println();
 	    	} while (lastKey!=null);
     	}
     }
-    
-    void testEvals(String[] args) throws Exception {
-    	String start = null;
-    	String stop = null;
-    	if (args.length>0)  start = args[0];
-    	if (args.length>1)  stop = args[1];
-    	
-    	DataSource d = BIGS.globalProperties.getConfiguredDataSource();
-    	
-    	Table t = d.getTable(Evaluation.tableName);
-    	Scan s = t.createScanObject();
-    	if (start!=null) s.setStartRow(start);
-    	if (stop!=null) s.setStopRow(stop);
-    	ResultScanner rs = t.getScan(s);
-    	Result r;
-    	while ( (r=rs.next())!=null) {
-    		Evaluation e = Evaluation.fromResultObject(r);
-    		Log.info("-> "+e.toString());
-    	}
-    	
-    }
-    
 
-    
     void testS3(String[] args) {
        String accessKey = "AKIAIOWFQRUK2AT6FPNA";    // example accessKey
        String secretKey = "EFz4K0HCSV8zcDWgj6GBlwdbH9C/nt4mvs46OQaL";    // example secretKey
@@ -250,13 +264,13 @@ System.out.println();
     }
 
     void testExplorations(String[] args) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
-    	DataSource d = BIGS.globalProperties.getConfiguredDataSource();
+    	DataSource d = BIGS.globalProperties.getPreparedDataSource();
     	
     	Table table = d.getTable(Pipeline.tableName);
     	Scan scan  = table.createScanObject();    	
     	scan.setStartRow("00002");
     	scan.setStopRow("00007");
-    	scan.setFilterByColumnValue("bigs", "status", "NEW".getBytes());
+    	scan.addFilterByColumnValue("bigs", "status", "NEW".getBytes());
     	ResultScanner rs = table.getScan(scan);
     	Result r = null;
     	while ( (r=rs.next())!=null) {

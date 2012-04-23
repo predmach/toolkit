@@ -1,8 +1,9 @@
-package pilot.core;
+package bigs.core.pipelines;
 
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -18,17 +19,17 @@ import bigs.api.storage.Result;
 import bigs.api.storage.Table;
 import bigs.api.utils.TextUtils;
 import bigs.core.BIGS;
+import bigs.core.data.DataItem;
 import bigs.core.utils.Core;
 import bigs.core.utils.Data;
 import bigs.core.utils.Text;
 
 
-import pilot.core.data.DataItem;
 
 public class ScheduleItem {
 	
 	public final static String tableName = "schedules";
-	public final static String[] columnFamilies = new String[]{ "scheduling", "bigs", "content" };	
+	public final static String[] columnFamilies = new String[]{ "scheduling", "bigs", "content", "tags" };	
 	
 	
 	public static Integer STATUS_PENDING     = 0;
@@ -36,10 +37,16 @@ public class ScheduleItem {
 	public static Integer STATUS_DONE        = 2;
 	public static Integer STATUS_FAILED      = 3;
 	
-	static String[] statusStrings = new String[]{ " PENDING  ",
-		                                          "INPROGRESS",
-		                                          "   DONE   ",
-		                                          "  FAILED  " };
+	public static String METHOD_PRESUBCONTAINERS = "preSubConteiners";
+	public static String METHOD_POSTSUBCONTAINERS = "postSubContainers";
+	public static String METHOD_PRELOOP          = "preLoop";
+	public static String METHOD_POSTLOOP         = "postLoop";
+	public static String METHOD_LOOPDATA         = "LOOP data";
+	
+	public static String[] statusStrings = new String[]{ " PENDING  ",
+		                                                 "INPROGRESS",
+		                                                 "   DONE   ",
+		                                                 "  FAILED  " };
 	
 	String methodName;
 	List<Integer> parentsIds = new ArrayList<Integer>();
@@ -52,8 +59,10 @@ public class ScheduleItem {
 	String uuiStored = "";
 	String hostnameStored = "";
 
-	Task configuredTask;
-	TaskContainer<Task> configuredTaskContainer;
+	Task preparedTask;
+	TaskContainer<? extends Task> preparedTaskContainer;
+	
+	Map<String, String> tags = new HashMap<String, String>();
 	
 	Integer status = ScheduleItem.STATUS_PENDING;
 	
@@ -66,11 +75,14 @@ public class ScheduleItem {
 		schedule.addItem(this);
 	}
 				
-	public ScheduleItem (Schedule schedule, TaskContainer<Task> configuredTaskContainer, Task configuredTask, String methodName) {
+	public ScheduleItem (Schedule schedule, 
+						 TaskContainer<? extends Task> configuredTaskContainer, 						
+						 Task configuredTask, 
+						 String methodName) {
 		this(schedule);
-		this.configuredTask = configuredTask;
+		this.preparedTask = configuredTask;
 		this.methodName = methodName;
-		this.configuredTaskContainer = configuredTaskContainer;
+		this.preparedTaskContainer = configuredTaskContainer;
 	}
 	
 	public Integer getId() {
@@ -93,12 +105,12 @@ public class ScheduleItem {
 		this.processState = processState;
 	}
 	
-	public Task getConfiguredTask() {
-		return this.configuredTask;
+	public Task getPreparedTask() {
+		return this.preparedTask;
 	}
 	
-	public TaskContainer getConfiguredTaskContainer() {
-		return this.configuredTaskContainer;
+	public TaskContainer<? extends Task> getPreparedTaskContainer() {
+		return this.preparedTaskContainer;
 	}
 	
 	public String getMethodName() {
@@ -231,6 +243,33 @@ public class ScheduleItem {
 		return this.parentsIds;
 	}
 	
+	List<ScheduleItem> getParents() {
+		List<ScheduleItem> r = new ArrayList<ScheduleItem>();
+		for (Integer parentId: this.getParentsIds()) {
+			ScheduleItem item = this.getSchedule().get(parentId);
+			if (item!=null) r.add(item);
+		}
+		return r;
+	}
+	
+	public void addTag(String key, String value) {
+		tags.put(key, value);
+	}
+	
+	public void addTags(Map<String, String> map) {
+		for (String k: map.keySet()) {
+			tags.put(k, map.get(k));
+		}
+	}
+	
+	public Map<String, String> getTags() {
+		return this.tags;
+	}
+	
+	public void setTags(Map<String, String> tags) {
+		this.tags = tags;
+	}
+	
 	/**
 	 * returns as string representation of the rowkey corresponding to this schedule item
 	 * @return
@@ -307,71 +346,19 @@ public class ScheduleItem {
 		if (shostname!=null) {
 			r.setHostnameStored(new String(shostname));
 		}
-				
-		byte[] sprocessStateClass = result.getValue("content", "class");		
-		if (sprocessStateClass!=null) {
-			Object obj;
-			try {
-				obj = Class.forName(new String(sprocessStateClass)).newInstance();
-				if (! (obj instanceof TextSerializable)) {
-					throw new BIGSException("state object for rowkey "+result.getRowKey()+" is not "+TextSerializable.class.getSimpleName());
-				}
-				
-				State processState = (State)obj;
-				byte[] sprocessStateObject = result.getValue("content", "data");		
-				if (sprocessStateObject!=null) {
-					processState.fromTextRepresentation(new String(sprocessStateObject));
-				}
-				r.setProcessState(processState);
-
-			} catch (Exception e) {
-				throw new BIGSException("error recreating state object "+e.getMessage());
-			} 
-		}		
-
+					
 		String parentsIdsString = new String(result.getValue("scheduling", "parents"));
 		
 		if (parentsIdsString!=null && !parentsIdsString.trim().isEmpty()) {
 			r.parentsIds = Text.parseObjectList(parentsIdsString, " ", Integer.class);
 		}
 		
-		byte[] taskClassNameBytes = result.getValue("scheduling", "task.class");
-		if (taskClassNameBytes!=null) {
-			Object obj = null;
-			try {
-				obj = Class.forName(new String(taskClassNameBytes)).newInstance();
-			} catch (Exception e) {
-				throw new BIGSException("error getting task in schedule item "+result.getRowKey()+". "+e.getMessage());
-			}
-			if (! (obj instanceof Task)) {
-				throw new BIGSException("task schedule item in db with rowkey '"+result.getRowKey()+"' must instantiate "+Task.class.getName());
-			}
-			
-			r.configuredTask = (Task)obj;
-			byte[] taskObject = result.getValue("scheduling", "task.object");
-			if (taskObject!=null) {
-				r.configuredTask.fromTextRepresentation(new String(taskObject));
-			}
-		}		
-
-		byte[] taskContainerClassNameBytes = result.getValue("scheduling", "task.container.class");
-		if (taskContainerClassNameBytes!=null) {
-			Object obj = null;
-			try {
-				obj = Class.forName(new String(taskContainerClassNameBytes)).newInstance();
-			} catch (Exception e) {
-				throw new BIGSException("error getting task conatiner in schedule item "+result.getRowKey()+". "+e.getMessage());
-			}
-			if (! (obj instanceof TaskContainer)) {
-				throw new BIGSException("task container schedule item in db with rowkey '"+result.getRowKey()+"' must instantiate "+TaskContainer.class.getName());
-			}
-			
-			r.configuredTaskContainer = (TaskContainer)obj;
-			byte[] taskContainerObject = result.getValue("scheduling", "task.container.object");
-			if (taskContainerObject!=null) {
-				r.configuredTaskContainer.fromTextRepresentation(new String(taskContainerObject));
-			}
-		}		
+		r.preparedTask = TaskHelper.fromResultObject(result, "scheduling", "task.class", "task.object");
+		r.processState = State.fromResultObject(result, "content", "class", "data");
+		r.preparedTaskContainer = TaskContainer.fromResultObject(result, "scheduling", "task.container.class", "task.container.object");
+		
+		r.tags = result.getFamilyMap("tags");
+		
 		return r;
 	}
 	
@@ -382,34 +369,39 @@ public class ScheduleItem {
 	 */
 	public Put fillPutObject (Put put) {		
 
-		if (this.configuredTask!=null) {
-			put.add("scheduling", "task.class", this.configuredTask.getClass().getName());
-			put.add("scheduling", "task.object", this.configuredTask.toTextRepresentation());			
+		if (this.preparedTask!=null) {
+			TaskHelper.toPutObject(this.preparedTask, put, "scheduling", "task.class", "task.object");
 		}
 		
-		if (this.configuredTaskContainer!=null) {
-			put.add("scheduling", "task.container.class", this.configuredTaskContainer.getClass().getName());
-			put.add("scheduling", "task.container.object", this.configuredTaskContainer.toTextRepresentation());			
+		if (this.preparedTaskContainer!=null) {
+			this.preparedTaskContainer.toPutObject(put, "scheduling", "task.container.class", "task.container.object");
 		}
 
+		if (this.getProcessState()!=null) {
+			this.getProcessState().toPutObject(put, "content", "class", "data");
+		}
+		
 		put.add("bigs","status", Bytes.toBytes(this.getStatusAsString()));
 		
 		put.add("scheduling", "parents", Bytes.toBytes(Text.collate(this.parentsIds.toArray(), " ")));
 		
 		put.add("scheduling", "method", Bytes.toBytes(this.getMethodName()));
-		
-		if (this.getProcessState()!=null) {
-			put.add("content", "class", Bytes.toBytes(this.getProcessState().getClass().getName()));
-			
-			put.add("content", "data", Bytes.toBytes(this.getProcessState().toTextRepresentation()));
-		}
-		
+				
 		lastUpdate = new Date(Core.getTime());
     	
 		put.add("bigs", "lastupdate", Bytes.toBytes(TextUtils.FULLDATE.format(this.lastUpdate)));
     		
     	if (this.elapsedTime!=null) {
     		put.add("bigs", "elapsedtime", Bytes.toBytes(this.elapsedTime.toString()));
+    	}
+    	
+    	if (this.tags!=null) {
+    		for (String k: this.tags.keySet()) {
+    			String v = this.tags.get(k);
+    			if (v!=null && !v.isEmpty()) {
+    				put.add("tags", k, Bytes.toBytes(v));
+    			}
+    		}
     	}
 		return put;
 	}
@@ -460,7 +452,7 @@ public class ScheduleItem {
 	 * @param dataSource the datasource
 	 */
 	public void save() {
-    	DataSource dataSource = BIGS.globalProperties.getConfiguredDataSource();
+    	DataSource dataSource = BIGS.globalProperties.getPreparedDataSource();
     	Table table = dataSource.getTable(ScheduleItem.tableName);
     	table.put(Data.fillInHostMetadata(this.fillPutObject(table.createPutObject(this.getRowKey()))));				
 	}
@@ -487,8 +479,8 @@ public class ScheduleItem {
 	
 	public ScheduleItem clone() {
 		ScheduleItem r = new ScheduleItem(this.schedule);
-		r.configuredTask = this.configuredTask;
-		r.configuredTaskContainer = this.configuredTaskContainer;
+		r.preparedTask = this.preparedTask;
+		r.preparedTaskContainer = this.preparedTaskContainer;
 		r.id = this.id;
 		r.parentsIds = this.parentsIds;
 		r.hostnameStored = this.hostnameStored;
@@ -517,15 +509,15 @@ public class ScheduleItem {
 		return true;
 	}		
 	
+	
 	/**
 	 * Checks if the schedule item is available to start working on it.
-	 * Returns true if all the schedule item parents are done
+	 * Returns true if all the schedule item parents are done.
 	 */
 	public boolean canProcess() {
 		if (this.isStatusPending()) {
 			Boolean anyParentNotFinished = false;
-			for (Integer parentId: this.getParentsIds()) {
-				ScheduleItem parent = this.getSchedule().get(parentId);
+			for (ScheduleItem parent: this.getParents()) {
 				if (parent==null) {
 					throw new BIGSException("parent for schedule item "+this.getRowKey()+" not found");
 				}
@@ -540,9 +532,8 @@ public class ScheduleItem {
 		return false;
 	}
 		
-	
 	public String toString() {
-		String r = this.getRowKey()+" "+configuredTaskContainer.toString()+ " "+	configuredTask.toString() + " " + methodName;
+		String r = this.getRowKey()+" "+preparedTaskContainer.toString()+ " "+	preparedTask.toString() + " " + methodName;
 		return r;
 	}
 	

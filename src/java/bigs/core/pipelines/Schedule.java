@@ -1,4 +1,4 @@
-package pilot.core;
+package bigs.core.pipelines;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,8 +9,6 @@ import bigs.api.storage.ResultScanner;
 import bigs.api.storage.Scan;
 import bigs.api.storage.Table;
 import bigs.core.BIGS;
-import bigs.core.explorations.Evaluation;
-import bigs.core.explorations.Pipeline;
 
 public class Schedule {
 
@@ -68,7 +66,7 @@ public class Schedule {
 	 */
 	public static Schedule load(PipelineStage pipelineStage) {
 		Schedule r = new Schedule(pipelineStage);
-		DataSource dataSource = BIGS.globalProperties.getConfiguredDataSource();
+		DataSource dataSource = BIGS.globalProperties.getPreparedDataSource();
 
 		ScheduleItem dummyStart = new ScheduleItem();
 		dummyStart.schedule = r;

@@ -2,7 +2,7 @@ package bigs.core.commands;
 
 import java.util.Arrays;
 
-import bigs.core.explorations.Pipeline;
+import bigs.core.pipelines.Pipeline;
 import bigs.core.utils.Log;
 
 

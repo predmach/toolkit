@@ -27,7 +27,7 @@ public class DataSourceTime extends Command {
 		
 		Log.info("time before calibration is "+TextUtils.FULLDATE.format(new Date(Core.getTime())));
 		// retrieving the datasource already forces time calibration
-		BIGS.globalProperties.getConfiguredDataSource(BIGSProperties.DONOT_CREATE_TABLES);
+		BIGS.globalProperties.getPreparedDataSource(BIGSProperties.DONOT_CREATE_TABLES);
 
 		Log.info("time after calibration is  "+TextUtils.FULLDATE.format(new Date(Core.getTime())));
 		Log.info("time again is              "+TextUtils.FULLDATE.format(new Date(Core.getTime())));

@@ -13,7 +13,7 @@ import bigs.api.storage.DataSource;
 import bigs.api.storage.Table;
 import bigs.core.BIGS;
 import bigs.core.exceptions.BIGSTableExistsException;
-import bigs.core.explorations.Pipeline;
+import bigs.core.pipelines.Pipeline;
 import bigs.core.utils.Log;
 
 import com.amazonaws.AmazonServiceException;

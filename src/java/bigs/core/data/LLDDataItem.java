@@ -1,12 +1,13 @@
-package pilot.core.data;
+package bigs.core.data;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONValue;
 
-public class LLDDataItem implements DataItem {
+public class LLDDataItem extends DataItem {
 
 	List<List<Double>> data = new ArrayList<List<Double>>();
 
@@ -33,6 +34,15 @@ public class LLDDataItem implements DataItem {
 			List<Double> ll = (List<Double>)o.get(i);
 			data.add(ll);
 		}			
+	}
+
+	@Override
+	public Map<String, String> getMetadata() {
+		return null;
+	}
+
+	@Override
+	public void setMetadata(Map<String, String> metadata) {
 	}
 
 }

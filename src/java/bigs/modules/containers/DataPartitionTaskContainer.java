@@ -1,6 +1,7 @@
-package pilot.modules.containers;
+package bigs.modules.containers;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -10,13 +11,12 @@ import org.json.simple.parser.ParseException;
 
 import bigs.api.core.BIGSParam;
 import bigs.api.exceptions.BIGSException;
+import bigs.core.data.DataItem;
+import bigs.core.pipelines.State;
+import bigs.core.pipelines.TaskContainer;
 
-import pilot.core.State;
-import pilot.core.TaskContainer;
-import pilot.core.data.DataItem;
-import pilot.core.data.LLDDataItem;
 
-public class DataPartitionTaskContainer extends TaskContainer<DataPartitionTask<State,DataItem,DataItem>> {
+public class DataPartitionTaskContainer extends TaskContainer<DataPartitionTask<State, DataItem, DataItem>> {
 
 	@BIGSParam
 	public Integer numberOfPartitions = 1;
@@ -41,7 +41,7 @@ public class DataPartitionTaskContainer extends TaskContainer<DataPartitionTask<
 	}
 
 	@Override
-	public List<TaskContainer<DataPartitionTask<State,DataItem,DataItem>>> generateMyConfiguredTaskContainers() {
+	public List<TaskContainer<DataPartitionTask<State,DataItem,DataItem>>> generateMyPreparedTaskContainers() {
 		List<TaskContainer<DataPartitionTask<State,DataItem,DataItem>>> r = new ArrayList<TaskContainer<DataPartitionTask<State,DataItem,DataItem>>>();
 		for (int i=1; i<= this.numberOfPartitions; i++) {
 			TaskContainer<DataPartitionTask<State,DataItem,DataItem>> tb = new DataPartitionTaskContainer(this.numberOfPartitions, i);
@@ -68,11 +68,9 @@ public class DataPartitionTaskContainer extends TaskContainer<DataPartitionTask<
 	}
 
 	@Override
-	public <D extends DataItem> D processDataItem(DataPartitionTask<State,DataItem,DataItem> configuredTask, D dataItem) {
-		
-		configuredTask.processPartitionDataItem(dataItem);
-		
-		return null;
+	public <I extends DataItem> DataItem processDataItem(DataPartitionTask<State,DataItem,DataItem> configuredTask, I dataItem) {
+		DataItem o = configuredTask.processPartitionDataItem(dataItem);
+		return o;
 	}
 
 	@Override
@@ -107,11 +105,24 @@ public class DataPartitionTaskContainer extends TaskContainer<DataPartitionTask<
 	}
 
 	@Override
-	public List<String> getDataItemTags(LLDDataItem tag) {
-		// TODO Auto-generated method stub
-		return null;
+	public Map<String, String> getDataItemTags(String dataItemRowkey) {
+		
+		Double d = Math.random()*this.numberOfPartitions+1;
+		Map<String, String> r = new HashMap<String, String>();
+		
+		r.put("partition", new Integer(d.intValue()).toString());
+		return r;
 	}
 
+	@Override
+	public Map<String, String> getMyTagsAsPrepared() {
+		if (this.partitionNumber==null) return null;
+		
+		Map<String, String> r = new HashMap<String, String>();
+		r.put("partition", this.partitionNumber.toString());
+		return r;
+	}
+	
 	@SuppressWarnings("unchecked")
 	@Override
 	public String toTextRepresentation() {

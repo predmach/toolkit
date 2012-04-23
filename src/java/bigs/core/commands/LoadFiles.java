@@ -2,9 +2,12 @@ package bigs.core.commands;
 
 import java.io.File;
 
+
 import bigs.api.storage.DataSource;
 import bigs.api.utils.TextUtils;
 import bigs.core.BIGS;
+import bigs.core.data.DataItem;
+import bigs.core.data.RawDataItem;
 import bigs.core.utils.Data;
 import bigs.core.utils.Log;
 import bigs.core.utils.Text;
@@ -26,8 +29,8 @@ public class LoadFiles extends Command {
 	public void run(String[] args) throws Exception {
 		
 		String tableName = args[0];
-    	DataSource dataSource = BIGS.globalProperties.getConfiguredDataSource();
-    	Data.createDataTableIfDoesNotExist(dataSource, tableName);
+    	DataSource dataSource = BIGS.globalProperties.getPreparedDataSource();
+    	DataItem.createDataTableIfDoesNotExist(dataSource, tableName);
     	
     	Long fileNumber = 1L;
     	
@@ -39,11 +42,15 @@ public class LoadFiles extends Command {
 				continue;
 			}
 			if (fileOrDir.isFile()) {
-				Data.uploadFile(fileOrDir, dataSource, tableName);
+				RawDataItem r = new RawDataItem();
+				r.setBytesAndRowkeyFromFile(fileOrDir);
+				r.save(dataSource, tableName);
 			} else if (fileOrDir.isDirectory()) {
 				for (File f: fileOrDir.listFiles()) {
 					if (f.isFile()) {
-						Data.uploadFile(f, dataSource, tableName);
+						RawDataItem r = new RawDataItem();
+						r.setBytesAndRowkeyFromFile(f);
+						r.save(dataSource, tableName);
 						Log.info("["+Text.zeroPad(fileNumber)+"] file "+f.getName()+" loaded into table "+tableName);
 						fileNumber ++;
 					}

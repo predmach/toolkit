@@ -1,10 +1,11 @@
-package pilot.modules.containers;
+package bigs.modules.containers;
 
 import java.util.List;
 
-import pilot.core.State;
-import pilot.core.Task;
-import pilot.core.data.DataItem;
+import bigs.core.data.DataItem;
+import bigs.core.pipelines.State;
+import bigs.core.pipelines.Task;
+
 
 public interface IterativeTask<S extends State, I extends DataItem, O extends DataItem> extends Task {
 	

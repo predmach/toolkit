@@ -1,19 +1,19 @@
-package pilot.modules.fe;
+package bigs.api.examples.fe;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import bigs.api.core.BIGSParam;
+import bigs.core.data.LLDDataItem;
+import bigs.core.data.RawDataItem;
+import bigs.core.pipelines.State;
+import bigs.core.pipelines.Task;
+import bigs.core.pipelines.TaskContainer;
+import bigs.modules.containers.DataPartitionTask;
+import bigs.modules.containers.DataPartitionTaskContainer;
 
-import pilot.core.Task;
-import pilot.core.TaskContainer;
-import pilot.core.TextSerializable;
-import pilot.core.data.LLDDataItem;
-import pilot.core.data.RawDataItem;
-import pilot.modules.containers.DataPartitionTask;
-import pilot.modules.containers.DataPartitionTaskContainer;
 
-public class SampleFeatureExtractor implements DataPartitionTask<RawDataItem, LLDDataItem> {
+public class IterativeAndSplitFeatureExtractor implements DataPartitionTask<State, RawDataItem, LLDDataItem> {
 
 	@BIGSParam
 	public Integer numberOfSplits = 1;
@@ -38,41 +38,41 @@ public class SampleFeatureExtractor implements DataPartitionTask<RawDataItem, LL
 	}
 
 	@Override
-	public TextSerializable beforeProcessingPartitionSubContainers(
-			TextSerializable previousState) {
+	public State beforeProcessingPartitionSubContainers(
+			State previousState) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public TextSerializable afterProcessingPartitionSubContainers(
-			TextSerializable previousState) {
+	public State afterProcessingPartitionSubContainers(
+			State previousState) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public void startPartition(TextSerializable previousState) {
+	public void startPartition(State previousState) {
 		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
-	public TextSerializable finalizePartition() {
+	public State finalizePartition() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public TextSerializable beforeProcessingAllPartitions(
-			TextSerializable previousState) {
+	public State beforeProcessingAllPartitions(
+			State previousState) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public TextSerializable afterProcessingAllPartitions(
-			List<TextSerializable> previousStates) {
+	public State afterProcessingAllPartitions(
+			List<State> previousStates) {
 		// TODO Auto-generated method stub
 		return null;
 	}

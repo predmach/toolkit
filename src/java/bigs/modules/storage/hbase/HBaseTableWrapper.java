@@ -107,7 +107,8 @@ public class HBaseTableWrapper implements Table {
 		if (! (scan instanceof HBaseScanWrapper)) {
 			throw new BIGSException ("framework is calling HBase datasource implementation with non HBase generated objects");
 		}
-		org.apache.hadoop.hbase.client.Scan hbasescan = ((HBaseScanWrapper)scan).hbaseScan;
+		HBaseScanWrapper scanWrapper = (HBaseScanWrapper)scan;
+		org.apache.hadoop.hbase.client.Scan hbasescan = scanWrapper.hbaseScan;
 		try {
 			return new HBaseResultScannerWrapper(hbaseTable.getScanner(hbasescan));
 		} catch (IOException e) {

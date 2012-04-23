@@ -1,6 +1,6 @@
 package bigs.core.commands;
 
-import pilot.core.worker.Worker;
+import bigs.core.worker.Worker;
 
 public class StartWorker extends Command {
 

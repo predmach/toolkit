@@ -1,6 +1,7 @@
-package pilot.modules.containers;
+package bigs.modules.containers;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -10,11 +11,9 @@ import org.json.simple.parser.ParseException;
 
 import bigs.api.core.BIGSParam;
 import bigs.api.exceptions.BIGSException;
-import pilot.core.State;
-import pilot.core.TaskContainer;
-import pilot.core.TextSerializable;
-import pilot.core.data.DataItem;
-import pilot.core.data.LLDDataItem;
+import bigs.core.data.DataItem;
+import bigs.core.pipelines.State;
+import bigs.core.pipelines.TaskContainer;
 
 public class IterativeTaskContainer extends TaskContainer<IterativeTask<State,DataItem,DataItem>> {
 
@@ -35,11 +34,10 @@ public class IterativeTaskContainer extends TaskContainer<IterativeTask<State,Da
 		this.numberOfIterations = numberOfIterations;
 		this.iterationNumber = iterationNumber;
 	}
-	
 
 
 	@Override
-	public List<TaskContainer<IterativeTask<State,DataItem,DataItem>>> generateMyConfiguredTaskContainers() {
+	public List<TaskContainer<IterativeTask<State,DataItem,DataItem>>> generateMyPreparedTaskContainers() {
 		List<TaskContainer<IterativeTask<State,DataItem,DataItem>>> r = new ArrayList<TaskContainer<IterativeTask<State,DataItem,DataItem>>>();
 		for (int i=1; i<= this.numberOfIterations; i++) {
 			TaskContainer<IterativeTask<State,DataItem,DataItem>> tb = new IterativeTaskContainer(this.numberOfIterations, i);
@@ -70,7 +68,7 @@ public class IterativeTaskContainer extends TaskContainer<IterativeTask<State,Da
 	}
 
 	@Override
-	public  <D extends DataItem> D processDataItem(IterativeTask<State,DataItem,DataItem> configuredTask, D dataItem) {
+	public <I extends DataItem> DataItem processDataItem(IterativeTask<State,DataItem,DataItem> configuredTask, I dataItem) {
 		return null;
 	}
 
@@ -99,10 +97,22 @@ public class IterativeTaskContainer extends TaskContainer<IterativeTask<State,Da
 	}
 
 	@Override
-	public List<String> getDataItemTags(LLDDataItem tag) {
-		// TODO Auto-generated method stub
-		return null;
+	public Map<String, String> getDataItemTags(String dataItemRowkey) {
+		Double d = Math.random()*this.numberOfIterations+1;
+		Map<String, String> r = new HashMap<String, String>();
+		
+		r.put("iteration", new Integer(d.intValue()).toString());
+		return r;
+		
 	}
+	
+	@Override
+	public Map<String, String> getMyTagsAsPrepared() {
+		Map<String, String> r = new HashMap<String, String>();
+		r.put("iteration", this.iterationNumber.toString());
+		return r;
+	}
+
 
 	@SuppressWarnings("unchecked")
 	@Override

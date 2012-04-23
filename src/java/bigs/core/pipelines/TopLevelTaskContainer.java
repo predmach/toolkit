@@ -1,9 +1,10 @@
-package pilot.core;
+package bigs.core.pipelines;
 
 import java.util.List;
+import java.util.Map;
 
-import pilot.core.data.DataItem;
-import pilot.core.data.LLDDataItem;
+import bigs.core.data.DataItem;
+
 
 public class TopLevelTaskContainer extends TaskContainer<Task> {
 
@@ -14,14 +15,12 @@ public class TopLevelTaskContainer extends TaskContainer<Task> {
 	}
 	
 	@Override
-	public List<TaskContainer<Task>> generateMyConfiguredTaskContainers() {
-		// TODO Auto-generated method stub
+	public List<TaskContainer<Task>> generateMyPreparedTaskContainers() {
 		return null;
 	}
 
 	@Override
 	public Boolean supportsParallelization() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -65,10 +64,14 @@ public class TopLevelTaskContainer extends TaskContainer<Task> {
 	public String toString() {
 		return "TopLevelTaskContainer []";
 	}
+	
+	@Override
+	public Map<String, String> getMyTagsAsPrepared() {
+		return null;
+	}
 
 	@Override
-	public List<String> getDataItemTags(LLDDataItem tag) {
-		// TODO Auto-generated method stub
+	public Map<String, String> getDataItemTags(String dataItemRowkey) {
 		return null;
 	}
 

@@ -1,4 +1,4 @@
-package pilot.core.examples.task;
+package bigs.api.examples.task;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,21 +10,18 @@ import org.json.simple.parser.ParseException;
 
 import bigs.api.core.BIGSParam;
 import bigs.api.exceptions.BIGSException;
+import bigs.core.data.DataItem;
+import bigs.core.data.LLDDataItem;
+import bigs.core.pipelines.Task;
+import bigs.core.pipelines.TaskContainer;
 import bigs.core.utils.Log;
-import pilot.core.Task;
-import pilot.core.TaskContainer;
-import pilot.core.data.DataItem;
-import pilot.core.data.LLDDataItem;
-import pilot.modules.containers.DataPartitionTask;
-import pilot.modules.containers.DataPartitionTaskContainer;
-import pilot.modules.containers.IterativeTask;
-import pilot.modules.containers.IterativeTaskContainer;
+import bigs.modules.containers.DataPartitionTask;
+import bigs.modules.containers.DataPartitionTaskContainer;
+import bigs.modules.containers.IterativeTask;
+import bigs.modules.containers.IterativeTaskContainer;
 
-public class KMeans implements DataPartitionTask<KMeansState, LLDDataItem, LLDDataItem>, IterativeTask<KMeansState, DataItem, DataItem> {
+public class IterateAndSplit implements DataPartitionTask<IterateAndSplitState, DataItem, DataItem>, IterativeTask<IterateAndSplitState, DataItem, DataItem> {
 
-	@BIGSParam
-	public Integer numberOfCentroids;
-	
 	@BIGSParam
 	public Integer numberOfIterations;
 	
@@ -35,7 +32,6 @@ public class KMeans implements DataPartitionTask<KMeansState, LLDDataItem, LLDDa
 	@Override
 	public String toTextRepresentation() {
 		JSONObject obj = new JSONObject();
-		obj.put("centroids", this.numberOfCentroids);
 		obj.put("iterations", this.numberOfIterations);
 		obj.put("partitions", this.numberOfPartitions);
 		return obj.toString();
@@ -48,7 +44,6 @@ public class KMeans implements DataPartitionTask<KMeansState, LLDDataItem, LLDDa
 		JSONParser parser = new JSONParser();
 		try {
 			Map<String, Long> json = (Map<String, Long>)parser.parse(textRepresentation);
-			if (json.get("centroids")!=null) this.numberOfCentroids = json.get("centroids").intValue();
 			if (json.get("iterations")!=null) this.numberOfIterations = json.get("iterations").intValue();
 			if (json.get("partitions")!=null) this.numberOfPartitions = json.get("partitions").intValue();
 			
@@ -56,12 +51,13 @@ public class KMeans implements DataPartitionTask<KMeansState, LLDDataItem, LLDDa
 			throw new BIGSException("error parsing JSON representation of "+this.getClass().getName());
 		}
 	}
-
+	
 	@Override
 	public String toString() {
-		return "KMeans [numberOfCentroids=" + numberOfCentroids + "]";
-	}	
-	
+		return "KMeans [numberOfIterations=" + numberOfIterations
+				+ ", numberOfPartitions=" + numberOfPartitions + "]";
+	}
+
 	@Override
 	public List<TaskContainer<? extends Task>> getTaskContainerCascade() {
 		List<TaskContainer<? extends Task>> r = new ArrayList<TaskContainer<? extends Task>>();
@@ -72,38 +68,41 @@ public class KMeans implements DataPartitionTask<KMeansState, LLDDataItem, LLDDa
 
 	/** -------------------------------------------------------------------
 
-	      Methods for IterativeTaskContainer
+	    Methods for IterativeTaskContainer
 	    
 	    -------------------------------------------------------------------*/
 
 	@Override
-	public KMeansState startIteration(KMeansState previousState) {	
+	public IterateAndSplitState startIteration(IterateAndSplitState previousState) {	
 		previousState.value = previousState.value +1D;
 		return previousState;
 	}
 
 
 	@Override
-	public KMeansState finalizeIteration(KMeansState previousState) {
+	public IterateAndSplitState finalizeIteration(IterateAndSplitState previousState) {
 		previousState.value = previousState.value/5.0D;
 		return previousState;
 	}
 
 
 	@Override
-	public KMeansState beforeAllIterations(KMeansState previousState) {
+	public IterateAndSplitState beforeAllIterations(IterateAndSplitState previousState) {
+		if (previousState == null) {
+			previousState = new IterateAndSplitState();
+		}
 		previousState.value = 1D;
 		return previousState;
 	}
 
 	@Override
-	public KMeansState afterAllIterations(List<KMeansState> previousStates) {
+	public IterateAndSplitState afterAllIterations(List<IterateAndSplitState> previousStates) {
 		
 		if (previousStates.size()!=1) {
 			throw new BIGSException("expecting only one iteration state in sequential process");
 		}
 		
-		KMeansState k = previousStates.get(0);
+		IterateAndSplitState k = previousStates.get(0);
 		k.value = k.value/6D;
 		Log.info("---> FINAL STATE "+k.toTextRepresentation());
 		return k;
@@ -112,13 +111,13 @@ public class KMeans implements DataPartitionTask<KMeansState, LLDDataItem, LLDDa
 
 	
 	@Override
-	public void startDataBlock(KMeansState previousState) {}
+	public void startDataBlock(IterateAndSplitState previousState) {}
 
 	@Override
 	public DataItem processIterativeDataItem(DataItem item) { return null; }
 
 	@Override
-	public KMeansState finalizeDataBlock() { return null; }
+	public IterateAndSplitState finalizeDataBlock() { return null; }
 
 
 	/** -------------------------------------------------------------------
@@ -127,52 +126,52 @@ public class KMeans implements DataPartitionTask<KMeansState, LLDDataItem, LLDDa
   
       	-------------------------------------------------------------------*/
 
-	KMeansState partitionState = new KMeansState();
+	IterateAndSplitState partitionState = new IterateAndSplitState();
 	@Override
-	public void startPartition(KMeansState previousState) {
+	public void startPartition(IterateAndSplitState previousState) {
 		partitionState.value = previousState.value*3;
 	}
 
 
 	@Override
-	public KMeansState finalizePartition() {
+	public IterateAndSplitState finalizePartition() {
 		partitionState.value = partitionState.value*4;
 		return partitionState;
 	}
 
 
 	@Override
-	public KMeansState beforeProcessingAllPartitions(KMeansState previousState) {
+	public IterateAndSplitState beforeProcessingAllPartitions(IterateAndSplitState previousState) {
 		previousState.value = previousState.value + 2;
 		return previousState;
 	}
 
 
 	@Override
-	public KMeansState afterProcessingAllPartitions(List<KMeansState> previousStates) {
-		KMeansState s = new KMeansState();
+	public IterateAndSplitState afterProcessingAllPartitions(List<IterateAndSplitState> previousStates) {
+		IterateAndSplitState s = new IterateAndSplitState();
 		s.value=0D;
-		for (KMeansState p: previousStates) {
+		for (IterateAndSplitState p: previousStates) {
 			s.value = s.value + p.value;
 		}
 		return s;
 	}
 
 	@Override
-	public KMeansState beforeProcessingPartitionSubContainers(KMeansState previousState) {
-		return null;
+	public IterateAndSplitState beforeProcessingPartitionSubContainers(IterateAndSplitState previousState) {
+		return previousState;
 	}
 
 
 	@Override
-	public KMeansState afterProcessingPartitionSubContainers(KMeansState previousState) {
-		return null;
+	public IterateAndSplitState afterProcessingPartitionSubContainers(IterateAndSplitState previousState) {
+		return previousState;
 	}
 
 	@Override
-	public LLDDataItem processPartitionDataItem(LLDDataItem item) {
+	public DataItem processPartitionDataItem(DataItem item) {
 		// TODO Auto-generated method stub
-		return null;
+		return item;
 	}
 
 

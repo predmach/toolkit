@@ -10,11 +10,17 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 
-import pilot.core.data.LLDDataItem;
+import bigs.core.data.LLDDataItem;
+
 
 public class Test {
 	public static void run() {
 
+		for (int i=0; i<=20; i++) {
+			Double d = Math.random()*15+1;
+			System.out.println("rnd "+d.intValue());
+		}
+		
 		
 		List<List<Double>> l = new ArrayList<List<Double>>();
 		

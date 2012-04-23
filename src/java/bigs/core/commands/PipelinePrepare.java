@@ -1,13 +1,25 @@
 package bigs.core.commands;
 
 import java.util.List;
+import java.util.Map;
 
-import pilot.core.PipelineStage;
-import pilot.core.Schedule;
 
 import bigs.api.exceptions.BIGSException;
-import bigs.core.explorations.Pipeline;
+import bigs.api.storage.DataSource;
+import bigs.api.storage.Result;
+import bigs.api.storage.ResultScanner;
+import bigs.api.storage.Scan;
+import bigs.api.storage.Table;
+import bigs.api.storage.Update;
+import bigs.core.data.DataItem;
+import bigs.core.pipelines.Pipeline;
+import bigs.core.pipelines.PipelineStage;
+import bigs.core.pipelines.Schedule;
+import bigs.core.pipelines.ScheduleItem;
+import bigs.core.pipelines.Task;
+import bigs.core.pipelines.TaskContainer;
 import bigs.core.utils.Log;
+import bigs.core.utils.Text;
 
 
 public class PipelinePrepare extends Command {
@@ -45,15 +57,47 @@ public class PipelinePrepare extends Command {
 		}
 		Log.info("Processing only stage one");
 		PipelineStage stage = stages.get(0);
-		Schedule schedule = stage.generateSchedule();
-		schedule.save();
 		
-    	
+		// first generate the schedule
+		Schedule schedule = stage.generateSchedule();
+		schedule.save();    	
 		Log.info("Pipeline "+pipelineNumber+" generated and saved "+schedule.getItems().size()+" schedule item ");
 		
-    	// marks the source dataset for splitting
-		Log.info("****** MUST IMPLEMENT TAG PHASE *****");
-    	Log.info("marked data splits in source dataset");
+		// then tag data items
+		Log.info("tagging data items ... ");
+		DataSource dataSource = stage.getPreparedInputDataSource();
+		Table table = dataSource.getTable(stage.getInputTableName());
+		Scan scan = table.createScanObject();
+		scan.addFamily("tags");
+		scan.addFamily("bigs");
+		ResultScanner rs = table.getScan(scan);
+		String tagPrefix = Text.zeroPad(new Long(stage.getPipeline().getPipelineNumber()), 5)
+						   +"."+
+						   Text.zeroPad(new Long(stage.getStageNumber()), 5);
+		try {
+			for (Result rr = rs.next(); rr!=null; rr = rs.next()) {					
+				String key = rr.getRowKey();
+		    	Update update = table.createUpdateObject(key);
+
+		    	List<TaskContainer<? extends Task>> containers = stage.getPreparedTask().getTaskContainerCascade();
+		    	for (TaskContainer<? extends Task> container: containers) {
+		    		container.setPipelineStage(stage);
+		    		Map<String, String> tags = container.getFQNDataItemTags(key);
+		    		if (tags!=null) {
+			    		for (String tagName: tags.keySet()) {
+			    			String tagValue = tags.get(tagName);
+			    			update.add("tags", tagName, tagValue.getBytes());
+			    		}
+		    		}
+		    	}
+		    	
+		    	table.update(update);
+			}
+		} finally {
+			rs.close();
+		}		
+		Log.info("data items tagged");
+		
     	// ----------------------------------
     	pipeline.setStatus(Pipeline.STATUS_ACTIVE);
     	pipeline.setTimeDone(null);

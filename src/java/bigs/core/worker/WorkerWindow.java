@@ -94,10 +94,10 @@ Log.info("bigs properties are\n"+bigsPropertiesFromArgs);
 		
 		btnShowCurrentExploration.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				if (worker.currentEvaluation == null) {
+				if (worker.currentScheduleItem == null) {
 					textPane.setText("no current exploration yet");
 				} else {
-					String r = worker.currentEvaluation.getParentExploration().getInfo();
+					String r = worker.currentScheduleItem.getSchedule().getPipelineStage().getPipeline().getInfo();
 					textPane.setText(r);
 				}
 			}
@@ -184,8 +184,8 @@ Log.info("----- using bigsproperties ----\n"+configuration);
 				String dots = ".";
 				while (true) {
 					dots=dots+".";
-					if (worker!=null && worker.currentEvaluation!=null) {
-						label.setText("Working on: "+worker.currentEvaluation.getRowKey()+" "+dots);
+					if (worker!=null && worker.currentScheduleItem!=null) {
+						label.setText("Working on: "+worker.currentScheduleItem.getRowKey()+" "+dots);
 					} else {
 						label.setText("Worker idle");
 					}

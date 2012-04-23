@@ -1,4 +1,4 @@
-package bigs.core.explorations;
+package bigs.core.pipelines;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -14,7 +14,6 @@ import java.util.Properties;
 
 import org.apache.hadoop.hbase.util.Bytes;
 
-import pilot.core.PipelineStage;
 
 import bigs.api.core.Configurable;
 import bigs.api.core.BIGSParam;
@@ -232,7 +231,7 @@ public class Pipeline extends Properties {
 	 * @return the retrieved pipeline object
 	 */
 	public static Pipeline fromPipelineNumber (Integer pipelineNumber) {
-    	DataSource d = BIGS.globalProperties.getConfiguredDataSource();
+    	DataSource d = BIGS.globalProperties.getPreparedDataSource();
 		Table table = d.getTable(Pipeline.tableName);
 
 		Get   get   = table.createGetObject(Text.zeroPad(new Long(pipelineNumber)));
@@ -243,26 +242,7 @@ public class Pipeline extends Properties {
 		Pipeline r = Pipeline.fromResultObject(table.get(get));
 		return r;
 	}
-	
-	/**
-	 * stores a configuration object in the DB
-	 * @param confNumber
-	 * @param obj
-	 */
-	public void storeConfiguration (Integer confNumber, Configurable obj) {
-		DataSource dataSource = BIGS.globalProperties.getConfiguredDataSource();
-		
-		Map<String, String> params = Core.getObjectAnnotatedFieldsAsString(obj, BIGSParam.class);
-		
-		Table table = dataSource.getTable(Evaluation.tableName);
-		Put put = table.createPutObject(confNumber.toString());
-		put.add("params", "class", Bytes.toBytes(obj.getClass().getName()));
-		for (String key: params.keySet()) {
-			put.add("params", key, Bytes.toBytes(params.get(key)));
-		}
-		table.put(put);
-		
-	}
+
 	
 	/**
 	 * returns the properties list as found in the original source
@@ -297,7 +277,7 @@ public class Pipeline extends Properties {
      * saves a pipeline in the data source configured in the global properties
      */
     public void save() {
-    	DataSource d = BIGS.globalProperties.getConfiguredDataSource();
+    	DataSource d = BIGS.globalProperties.getPreparedDataSource();
 		Table table = d.getTable(Pipeline.tableName);
 
 		if (pipelineNumber==null || pipelineNumber==0) {
@@ -332,20 +312,20 @@ public class Pipeline extends Properties {
      */
     Integer getNextFreeExporationNumber() {
     	
-    	DataSource d = BIGS.globalProperties.getConfiguredDataSource();
+    	DataSource d = BIGS.globalProperties.getPreparedDataSource();
 		Table table = d.getTable(BIGS.tableName);
 		return table.incrementColumnValue("counters", "content", "pipeline", 1);
     }    
     
     public static List<Pipeline> getPipelinesForStatus (Integer status ) {
-		DataSource dataSource = BIGS.globalProperties.getConfiguredDataSource();
+		DataSource dataSource = BIGS.globalProperties.getPreparedDataSource();
 		List<Pipeline> r = new ArrayList<Pipeline> ();
 		Table table = dataSource.getTable(Pipeline.tableName);
 		Scan scan = table.createScanObject();
 		for (String family: Pipeline.columnFamilies) {
 			scan.addFamily(family);
 		}
-		scan.setFilterByColumnValue("bigs", "status", Bytes.toBytes(STATUS_STRINGS[status].trim()));
+		scan.addFilterByColumnValue("bigs", "status", Bytes.toBytes(STATUS_STRINGS[status].trim()));
 		ResultScanner rs = table.getScan(scan);
 		try {
 			for (Result rr = rs.next(); rr!=null; rr = rs.next()) {					
@@ -360,38 +340,8 @@ public class Pipeline extends Properties {
     }
     
 	
-    List<Evaluation> cachedEvaluations = null;
-	/**
-	 * Retrieves from the underlying storage all evaluations corresponding to this pipeline.
-	 * Caches the result unless specified in the arguments
-	 * @param useCache if false will always get the evals from the DB
-	 * @return the list of evaluations of this pipeline
-	 */
-	public List<Evaluation> getAllEvaluations (Boolean useCache) {
-		if (cachedEvaluations!=null && useCache) return cachedEvaluations;
-		DataSource dataSource = BIGS.globalProperties.getConfiguredDataSource();
-		List<Evaluation> r = new ArrayList<Evaluation> ();
-		Table table = dataSource.getTable(Evaluation.tableName);
-		Scan scan = table.createScanObject();
-		scan.setStartRow(Text.zeroPad(new Long(this.pipelineNumber)));
-		scan.setStopRow(Text.zeroPad(new Long(this.pipelineNumber+1)));
-		for (String family: Evaluation.columnFamilies) {
-			scan.addFamily(family);
-		}
-		ResultScanner rs = table.getScan(scan);
-		try {
-			for (Result rr = rs.next(); rr!=null; rr = rs.next()) {					
-				Evaluation ev = Evaluation.fromResultObject(rr);
-				r.add(ev);
-			}
-		} finally {
-			rs.close();
-		}	
-		cachedEvaluations = r;
-		return cachedEvaluations;
-	}    
-
 	public String getInfo() {
+/*		
 		List<Evaluation> evals = this.getAllEvaluations(Core.NOCACHE);
 
 		Integer totalRepeats = 0; Integer repeatsDone = 0; Integer repeatsInProgress = 0;
@@ -500,6 +450,8 @@ public class Pipeline extends Properties {
 
 		
 		return sb.toString();
+		*/
+		return "INFO NOT IMPLEMENTED YET";
 	}
 	
 }

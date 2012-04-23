@@ -17,7 +17,6 @@ import net.sf.jmimemagic.Magic;
 
 import org.apache.hadoop.hbase.util.Bytes;
 
-import pilot.core.ScheduleItem;
 
 import bigs.api.exceptions.BIGSException;
 import bigs.api.storage.DataSource;
@@ -31,13 +30,12 @@ import bigs.api.storage.Update;
 import bigs.api.utils.TextUtils;
 import bigs.core.BIGS;
 import bigs.core.exceptions.BIGSTableExistsException;
-import bigs.core.explorations.Evaluation;
-import bigs.core.explorations.Pipeline;
+import bigs.core.pipelines.Pipeline;
+import bigs.core.pipelines.ScheduleItem;
 
 
 public class Data {
 	
-	public static String[] dataTableColumnFamilies = new String[] {"bigs", "content", "metadata", "splits"};
 	/**
 	 * creates core bigs tables and field information in data source if the don't exist
 	 * @param dataSource
@@ -48,51 +46,7 @@ public class Data {
 		Data.createTableIfDoesNotExist(dataSource, ScheduleItem.tableName, ScheduleItem.columnFamilies);
 		Data.createTableIfDoesNotExist(dataSource, Pipeline.tableName, Pipeline.columnFamilies);		
 	}
-	
-	
-	static public void createDataTableIfDoesNotExist (DataSource dataSource, String tableName) {
-		Data.createTableIfDoesNotExist(dataSource, tableName, dataTableColumnFamilies);
-	}
-	
-	/**
-	 * adds the contents of a file to a data table.
-	 * Content is added to the column "content:data". Other metadata is added to the "metadata" family
-	 * @param dataSource the object representing the data source 
-	 * @param tableName the name of the data table
-	 * @param file the file to add
-	 */
-	static public void uploadFile(File file, DataSource dataSource, String tableName) {
-		if (!file.exists()) {
-			throw new BIGSException("file "+file.getAbsolutePath()+" does not exist when uploading into table "+tableName);
-		}
-		try {
-			Table table = dataSource.getTable(tableName);
-			Put   put   = table.createPutObject(file.getName());
-			byte[] fileContent = getBytesFromFile(file);
-			put.add("content", "data", fileContent);
-			put.add("metadata", "path", file.getAbsolutePath().getBytes());
-			put.add("bigs", "hostname", Network.getHostName().getBytes());
-			put.add("bigs", "importDate", TextUtils.FULLDATE.format(Calendar.getInstance().getTime()).getBytes());
-			put.add("bigs", "uuid", Core.myUUID.getBytes());
-			put.add("metadata", "size", new Long(fileContent.length).toString().getBytes());
-			
-			String mimeType = "unknown";
-			try {
-				mimeType = Magic.getMagicMatch(fileContent).getMimeType().toString();
-			} catch (Exception e) {
-				throw new BIGSException("");
-			} catch (java.lang.NoClassDefFoundError ne) {
-				// do nothing, we assume the library does not know the file
-			}
-			
-			put.add("metadata", "type", mimeType.getBytes());
-			table.put(put);
-		} catch (IOException e) {
-			throw new BIGSException("could not upload file "+file.getName()+", "+e.getMessage());
-		}
 		
-	}
-
 	
 	/**
 	 * creates a table in the specified data source. If the table already exists, it checks it has the

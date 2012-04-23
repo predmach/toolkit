@@ -1,4 +1,4 @@
-package pilot.core;
+package bigs.core.pipelines;
 
 public interface TextSerializable {
 	

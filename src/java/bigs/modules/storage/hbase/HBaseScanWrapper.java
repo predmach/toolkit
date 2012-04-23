@@ -1,5 +1,6 @@
 package bigs.modules.storage.hbase;
 
+import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
 import org.apache.hadoop.hbase.filter.CompareFilter;
 import org.apache.hadoop.hbase.util.Bytes;
@@ -11,6 +12,8 @@ import bigs.core.utils.Log;
 public class HBaseScanWrapper implements Scan {
 
 	org.apache.hadoop.hbase.client.Scan hbaseScan;
+	
+	FilterList filterList = new FilterList();
 
 	public HBaseScanWrapper() {
 		hbaseScan = new org.apache.hadoop.hbase.client.Scan();
@@ -37,12 +40,14 @@ public class HBaseScanWrapper implements Scan {
 	}
 
 	@Override
-	public void setFilterByColumnValue(String columnFamily, String columnName, byte[] value) {
+	public void addFilterByColumnValue(String columnFamily, String columnName, byte[] value) {
 		SingleColumnValueFilter filter = new SingleColumnValueFilter(
 				Bytes.toBytes(columnFamily), Bytes.toBytes(columnName), 
 				CompareFilter.CompareOp.EQUAL, value);	
 		
-		hbaseScan.setFilter(filter);		
+		filterList.addFilter(filter);
+		
+		hbaseScan.setFilter(filterList);		
 	}
 
 }

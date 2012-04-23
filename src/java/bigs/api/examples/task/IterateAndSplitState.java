@@ -1,4 +1,4 @@
-package pilot.core.examples.task;
+package bigs.api.examples.task;
 
 import java.util.Map;
 
@@ -7,11 +7,11 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import bigs.api.exceptions.BIGSException;
+import bigs.core.pipelines.State;
+import bigs.core.pipelines.TextSerializable;
 
-import pilot.core.State;
-import pilot.core.TextSerializable;
 
-public class KMeansState implements State {
+public class IterateAndSplitState extends State {
 
 	public Double value = 0D;
 	

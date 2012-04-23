@@ -1,8 +1,6 @@
-package pilot.core;
+package bigs.core.pipelines;
 
 import java.util.List;
-
-import pilot.core.data.DataItem;
 
 import bigs.api.core.Configurable;
 

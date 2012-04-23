@@ -39,6 +39,6 @@ public interface Scan {
 	 * @param columnName
 	 * @param value
 	 */
-	public void setFilterByColumnValue(String columnFamily, String columnName, byte[] value);
+	public void addFilterByColumnValue(String columnFamily, String columnName, byte[] value);
 
 }

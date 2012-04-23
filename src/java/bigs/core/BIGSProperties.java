@@ -37,8 +37,8 @@ public class BIGSProperties extends Properties {
 	 * wrapper overloaded method with default behavior to create non existing tables
 	 * @return
 	 */
-	public DataSource getConfiguredDataSource() {
-		return this.getConfiguredDataSource(true);
+	public DataSource getPreparedDataSource() {
+		return this.getPreparedDataSource(true);
 	}
 		
 	/**
@@ -48,7 +48,7 @@ public class BIGSProperties extends Properties {
 	 * @param initTables if true non existing system tables will be created
 	 * @return
 	 */
-	public DataSource getConfiguredDataSource(Boolean initTables) {
+	public DataSource getPreparedDataSource(Boolean initTables) {
 		// returned pooled connection if it is working
 		if (pooledDataSource!=null && pooledDataSource.isAlive()) {
 			return pooledDataSource;
@@ -57,7 +57,7 @@ public class BIGSProperties extends Properties {
 		// else retrieve its definition from properties file and create it
 		try {
 			pooledDataSource =
-					Core.getConfiguredObject(
+					Core.getPreparedObject(
 							ldatasource, DataSource.class,this, lprefix);
 		} catch (BIGSPropertyNotFoundException e) {
 			throw new BIGSException("error in properties: "+e.getMessage());

@@ -1,9 +1,11 @@
 package bigs.core.worker;
-
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
-import bigs.api.core.Algorithm;
+
+import bigs.api.exceptions.BIGSException;
 import bigs.api.storage.DataSource;
 import bigs.api.storage.Put;
 import bigs.api.storage.Result;
@@ -12,9 +14,15 @@ import bigs.api.storage.Scan;
 import bigs.api.storage.Table;
 import bigs.core.BIGS;
 import bigs.core.BIGSProperties;
-import bigs.core.explorations.Evaluation;
-import bigs.core.explorations.Pipeline;
-import bigs.core.explorations.ExplorationStage;
+import bigs.core.data.DataItem;
+import bigs.core.pipelines.Pipeline;
+import bigs.core.pipelines.PipelineStage;
+import bigs.core.pipelines.Schedule;
+import bigs.core.pipelines.ScheduleItem;
+import bigs.core.pipelines.State;
+import bigs.core.pipelines.Task;
+import bigs.core.pipelines.TaskContainer;
+import bigs.core.pipelines.TextSerializable;
 import bigs.core.utils.Core;
 import bigs.core.utils.Data;
 import bigs.core.utils.Log;
@@ -23,82 +31,44 @@ import bigs.core.utils.Text;
 
 public class Worker {
 	
-	public Evaluation currentEvaluation = null;
+	public ScheduleItem currentScheduleItem = null;
 	
 	Boolean abort = false;
 	
-	/**
-	 * returns true if the eval passed as argument is available to start working on it.
-	 * Basically considers evals PENDING and evals INPROGRESS with no recent ping
-	 */
-	boolean needsProcessing(Evaluation eval) {
-		if (eval.isStatusPending()) return true;		
 
-		if (eval.isStatusInProgress()) {
-			Long now = Core.getTime();
-			Long lastUpdate = eval.getLastUpdate().getTime();
-			
-			if (now-lastUpdate>BIGSProperties.WORKER_CLEAN_INTERVAL) {
-				Log.debug("cleaning up "+eval.getRowKey());
-				eval.setStatus(Evaluation.STATUS_PENDING);
-				eval.save();
-				return true;
-			}
-		}
-		return false;
-	}
+
 	
-	/**
-	 * returns true if the evaluation passed as argument is the first 
-	 * evaluation to process in this explorations. This is used to mark
-	 * the start time of the exploration
-	 * @param eval
-	 * @return 
-	 */
-	boolean isFirstEvalInExploration(Evaluation eval) {
-		if (eval.getRepeatNumber()==1 && eval.getConfigNumber()==1 && eval.getSplitNumber()==1) {
-			return true;
-		} else {
-			return false;
-		}
-	}
-	
-	
-	Evaluation selectNextEvaluation() {
+	ScheduleItem selectNextScheduleItem() {
 		
-		// retrieve the explorations which are active in the DB
-    	List<Pipeline> activeExplorations = Pipeline.getPipelinesForStatus(Pipeline.STATUS_ACTIVE);
-    	if (activeExplorations == null || activeExplorations.size()==0) {
+		// retrieve the pipelines which are active in the DB
+    	List<Pipeline> activePipelines = Pipeline.getPipelinesForStatus(Pipeline.STATUS_ACTIVE);
+    	if (activePipelines == null || activePipelines.size()==0) {
     		return null;
     	}
     	
-    	// Look what exploration still has evaluations pending
-    	for (Pipeline expl: activeExplorations) {
-    		List<Evaluation> evals = expl.getAllEvaluations(Core.NOCACHE);
+    	// Look what pipeline still has schedule items pending
+    	for (Pipeline pipeline: activePipelines) {
+    		Schedule schedule = pipeline.getStages().get(0).loadSchedule();
     		
-    		// check if all splits are done and mark the exploration done if so
-    		Boolean anySplitNotDone = false;
-    		for (Evaluation eval: evals) {
-    			if (eval.isSplit() && !eval.isStatusDone()) anySplitNotDone = true;    			
+    		// check if all schedule items are done and mark the pipeline done if so
+    		Integer unfinishedScheduleItems=0;
+    		for (ScheduleItem si: schedule.getItems()) {
+    			if (!si.isStatusDone()) unfinishedScheduleItems ++;
     		}
-    		
-    		// if the exploration is active and all evaluations are done, mark the exploration as done
-    		if (!anySplitNotDone) {
-    			expl.setStatus(Pipeline.STATUS_DONE);
-    			expl.setTimeDoneFromTimeReference();
-    			expl.save();
+    		// if the pipeline is active and all schedule items are done, mark the pipeline as done
+    		if (unfinishedScheduleItems.equals(0)) {
+    			pipeline.setStatus(Pipeline.STATUS_DONE);
+    			pipeline.setTimeDoneFromTimeReference();
+    			pipeline.save();
     			continue;
     		}
 
-    		// Now select which evaluation within the exploration
-    		for (Evaluation eval: evals) {
-    			eval.setParentExploration(expl);
-    			if (!eval.isSplit()) continue;
-    			if (!needsProcessing(eval)) continue;												
-    			return eval;
+    		// Now select which schedule item within the pipeline
+    		for (ScheduleItem scheduleItem: schedule.getItems()) {
+    			if (scheduleItem.canProcess()) return scheduleItem;												
     		}
     		
-    		// if we got here no evaluation was selected and we move over next exploration
+    		// if we got here no schedule item was selected and we move over next pipeline
     	}
     	return null;
 		
@@ -119,37 +89,42 @@ public class Worker {
         while (true) {
 
         	try {
-	        	Evaluation eval = this.selectNextEvaluation();
-	    		if (eval!=null) {
+	        	ScheduleItem scheduleItem = this.selectNextScheduleItem();
+	    		if (scheduleItem!=null) {
 					// set status to INPROGRESS and take over the split
-					Table evalTable = BIGS.globalProperties.getConfiguredDataSource().getTable(Evaluation.tableName);
-					Put put = evalTable.createPutObject(eval.getRowKey());
-					eval.setStatus(Evaluation.STATUS_INPROGRESS);
-					put = eval.fillPutObject(put);
+					Table evalTable = BIGS.globalProperties.getPreparedDataSource().getTable(ScheduleItem.tableName);
+					Put put = evalTable.createPutObject(scheduleItem.getRowKey());
+					scheduleItem.setStatusInProgress();
+					put = scheduleItem.fillPutObject(put);
 					put = Data.fillInHostMetadata(put);
-					Boolean success = evalTable.checkAndPut(eval.getRowKey(), "bigs", "status", Evaluation.getStatusString(Evaluation.STATUS_PENDING).getBytes(), put);
+					Boolean success = evalTable.checkAndPut(scheduleItem.getRowKey(), "bigs", "status", ScheduleItem.statusStrings[ScheduleItem.STATUS_PENDING].getBytes(), put);
 					// if we did not succeed in setting the status to pending it is because somebody else did and it is working on it
 					if (success) {
-						if (this.isFirstEvalInExploration(eval)) {
-							eval.getParentExploration().setTimeStartFromTimeReference();
-							eval.getParentExploration().setTimeDone(null);
-							eval.getParentExploration().save();
+						Pipeline pipeline = scheduleItem.getSchedule().getPipelineStage().getPipeline();
+						
+						if (scheduleItem.getId().equals(0)) {
+							pipeline.setTimeStartFromTimeReference();
+							pipeline.setTimeDone(null);
+							pipeline.save();
 						}
-						this.doEval(eval);
+						currentScheduleItem = scheduleItem;
+						this.doScheduleItem(scheduleItem);
 						if (!abort) {
-							eval.setStatus(Evaluation.STATUS_DONE);
-							eval.save();
+							scheduleItem.setStatusDone();
+							scheduleItem.save();
 						} else {
-							Log.info("evaluation aborted");
+							Log.info("schedule item aborted");
 							abort = false;
 						}
+						currentScheduleItem = null;
 	        		}        			
 	        	} else {
-	            	Log.info("no active explorations found. will look again in a while");
+	            	Log.info("no available schedule items found. will look again in a while");
 	            	Core.sleep(BIGSProperties.WORKER_SLEEP_INTERVAL);
 	        	}        	
         	} catch (Exception e) {
         		Log.error("worker catched exception "+e.getClass().getName()+", "+e.getMessage());
+        		e.printStackTrace();
         		Log.error("will wait a while and start looking to something to do again");
         		Core.sleep(BIGSProperties.WORKER_ALIVE_INTERVAL);
         	}
@@ -158,69 +133,134 @@ public class Worker {
 
 
 	
-	public void doEval(Evaluation eval) {
-/*		
-		Log.info("worker on eval "+eval.toString());
-		currentEvaluation = eval;
-
-		Integer stageNumber = eval.getStageNumber().intValue()-1;
-		ExplorationStage stage = eval.getParentExploration().getStages().get(stageNumber);
-		DataSource originDataSource    = stage.getConfiguredOriginDataSource();
-		String     originDataTableName = stage.getOriginContainerName();
-		DataSource destinationDataSource    = stage.getConfiguredDestinationDataSource();
-		String     destinationDataTableName = stage.getDestinationContainerName();
-				
-		Algorithm algorithm = eval.getConfiguredAlgorithm();
+	@SuppressWarnings("unchecked")
+	public void doScheduleItem(ScheduleItem scheduleItem) {
 		
-		Data.createDataTableIfDoesNotExist(destinationDataSource, destinationDataTableName);
-
-		Table originTable = originDataSource.getTable(originDataTableName);
-		Table destinationTable = destinationDataSource.getTable(destinationDataTableName);
-				
-		Scan scan = originTable.createScanObject();
-		for (String family: Data.dataTableColumnFamilies) {
-			scan.addFamily(family);
-		}
-		scan.setFilterByColumnValue("splits", Text.zeroPad(eval.getExplorationNumber()), eval.getSplitNumber().toString().getBytes());
-		ResultScanner rs = originTable.getScan(scan);
-		try {
-			for (Result rr = rs.next(); rr!=null; rr = rs.next()) {						
-				Log.info("      input  rowkey "+rr.getRowKey());
-
-				byte[] bytes = rr.getValue("content", "data");
-
-				Date startTime = new Date();
-				//---------------------------------------
-				// This is the actual algorithm running
-				byte[] result = algorithm.run(bytes);
-				//---------------------------------------
-				if (abort) {
-					Log.error("aborting this evaluation: "+eval.getRowKey());
-					return;
-				}
-				Date endTime = new Date();
-				
-				eval.addToElapsedTime(endTime.getTime() - startTime.getTime());
-
-				String destinationRowKey = eval.getRowKey()+":"+rr.getRowKey();
-				if (algorithm.outputDataRowkeyPrefix()==Algorithm.ROWKEYPREFIX_EXPLORATION_CONFIG_STAGE) {
-					destinationRowKey = Text.zeroPad(eval.getExplorationNumber())+"."+
-				                        Text.zeroPad(eval.getConfigNumber())+"."+
-				                        Text.zeroPad(eval.getStageNumber())+":"+
-				                        rr.getRowKey();					
-				}				
-				Log.info("      output rowkey "+destinationRowKey);
-				
-				Put put = destinationTable.createPutObject(destinationRowKey);
-				put.add("content", "data", result);
-				put = Data.fillInHostMetadata(put);
-				destinationTable.put(put);
+		String methodName = scheduleItem.getMethodName();
+		TaskContainer preparedContainer = scheduleItem.getPreparedTaskContainer();
+		Task preparedTask = scheduleItem.getPreparedTask();
+		Schedule schedule = scheduleItem.getSchedule();
+		
+		Log.info("doing "+scheduleItem.toString());
+		
+		if (!scheduleItem.getMethodName().equals("postLoop")) {
+			List<Integer> parentsIds = scheduleItem.getParentsIds();
+			if (parentsIds.size()>1) {
+				throw new BIGSException("schedule item "+scheduleItem.toString()+" can only have one parent and it has "+parentsIds.size());
 			}
-		} finally {
-			rs.close();
-		}		
-		currentEvaluation = null;
-*/		
+	
+			State previousState = null;
+			
+			Integer parentId = null;
+			if (parentsIds.size()>0) parentId = parentsIds.get(0);
+			if (parentId!=null) previousState = schedule.get(parentId).getProcessState();
+			
+			State resultState = null;
+			
+			if (methodName.equals(ScheduleItem.METHOD_PRESUBCONTAINERS)) {				
+				resultState = preparedContainer.processPreSubContainers(preparedTask, previousState);
+			} else if (methodName.equals(ScheduleItem.METHOD_POSTSUBCONTAINERS)) {
+				resultState = preparedContainer.processPostSubContainers(preparedTask, previousState);				
+			} else if (methodName.equals(ScheduleItem.METHOD_LOOPDATA)) {
+				
+				preparedContainer.processPreDataBlock(preparedTask, previousState);				
+				Map<String, String> tags = scheduleItem.getTags();
+				
+				PipelineStage stage = scheduleItem.getSchedule().getPipelineStage();
+				DataSource inputDataSource    = stage.getPreparedInputDataSource();
+				String     inputDataTableName = stage.getInputTableName();
+				DataSource outputDataSource    = stage.getPreparedOutputDataSource();
+				String     outputDataTableName = stage.getOutputTableName();
+						
+				DataItem.createDataTableIfDoesNotExist(outputDataSource, outputDataTableName);
+
+				Table inputTable = inputDataSource.getTable(inputDataTableName);
+				Table outputTable = outputDataSource.getTable(outputDataTableName);
+						
+				Scan scan = inputTable.createScanObject();
+				for (String family: DataItem.dataTableColumnFamilies) {
+					scan.addFamily(family);
+				}
+				
+				if (tags!=null) {
+					Log.debug("worker on data items with tag");
+					for (String tagName: tags.keySet()) {
+						String tagValue = tags.get(tagName);
+						scan.addFilterByColumnValue("tags", tagName, tags.get(tagName).getBytes());
+						Log.debug("    "+tagName+" = "+tagValue);						
+					}					
+				}
+				
+				ResultScanner rs = inputTable.getScan(scan);
+				
+				try {
+					for (Result rr = rs.next(); rr!=null; rr = rs.next()) {						
+						Log.info("      input  rowkey "+rr.getRowKey());
+
+						DataItem dataItem = DataItem.fromResult(rr);
+
+						Date startTime = new Date();
+						//---------------------------------------
+						// This is the actual task running
+						DataItem outputDataItem = preparedContainer.processDataItem(preparedTask, dataItem);
+						//---------------------------------------
+						if (abort) {
+							Log.error("aborting this evaluation: "+rr.getRowKey());
+							return;
+						}
+						Date endTime = new Date();
+						
+						scheduleItem.addToElapsedTime(endTime.getTime() - startTime.getTime());
+
+						Log.info("*** MUST STILL STORE OUTPUT DATA ITEM ***");
+/*						
+						String destinationRowKey = eval.getRowKey()+":"+rr.getRowKey();
+						if (algorithm.outputDataRowkeyPrefix()==Algorithm.ROWKEYPREFIX_EXPLORATION_CONFIG_STAGE) {
+							destinationRowKey = Text.zeroPad(eval.getExplorationNumber())+"."+
+						                        Text.zeroPad(eval.getConfigNumber())+"."+
+						                        Text.zeroPad(eval.getStageNumber())+":"+
+						                        rr.getRowKey();					
+						}				
+						Log.info("      output rowkey "+destinationRowKey);
+						
+						Put put = outputTable.createPutObject(destinationRowKey);
+						put.add("content", "data", result);
+						put = Data.fillInHostMetadata(put);
+						outputTable.put(put);
+*/						
+					}
+					
+					resultState = preparedContainer.processPostDataBlock(preparedTask);
+				} finally {
+					rs.close();
+				}
+			} else if (methodName.equals(ScheduleItem.METHOD_PRELOOP)) {
+				resultState = preparedContainer.processPreLoop(preparedTask, previousState);
+			}
+			
+			scheduleItem.setProcessState(resultState);
+		} else if (methodName.equals(ScheduleItem.METHOD_POSTLOOP)){
+			List<Integer> parentsIds = scheduleItem.getParentsIds();
+			List<TextSerializable> parentsStates = new ArrayList<TextSerializable>();
+			for (Integer i: parentsIds) {
+				ScheduleItem parent = schedule.get(i);
+				if (parent==null) {
+					parentsStates.add(null);
+				} else {
+					parentsStates.add(parent.getProcessState());
+				}
+			}
+			
+			State resultState = preparedContainer.processPostLoop(preparedTask, parentsStates);
+			scheduleItem.setProcessState(resultState);
+		}
+		
+		Long minTime = 0L;
+		Long maxTime = 1L;
+		Long elapsedTime = minTime + new Double(Math.random()*( maxTime.doubleValue()-minTime.doubleValue())).longValue();
+		Core.sleep(elapsedTime * 1000L);
+		
+		
 	}
 	
 	public String toString() {
@@ -242,21 +282,21 @@ public class Worker {
         public void run() {        	
                 while (!stop) {
                         Core.sleep(BIGSProperties.WORKER_ALIVE_INTERVAL);
-                        DataSource bigsDataSource = BIGS.globalProperties.getConfiguredDataSource();
+                        DataSource bigsDataSource = BIGS.globalProperties.getPreparedDataSource();
                         if (abort) {
                         	Log.debug("abort programeed. skipping worker alive update");
                         	continue;
                         }
-                        if (bigsDataSource!=null && worker.currentEvaluation!=null) {                        	
-                                synchronized(worker.currentEvaluation) {
-                                	Evaluation storedEval = Evaluation.load(BIGS.globalProperties.getConfiguredDataSource(), currentEvaluation.getRowKey());
-                                	if (!storedEval.getUuidStored().equals(Core.myUUID)) {
-                                		Log.error("current evaluation has been updated by another worker. stopping this evaluation whenever possible. ");
-                                	} else if (currentEvaluation!=null) {
-                                		worker.currentEvaluation.markAlive(bigsDataSource);                           
+                        if (bigsDataSource!=null && worker.currentScheduleItem!=null) {                        	
+                                synchronized(worker.currentScheduleItem) {
+                                	ScheduleItem storedScheduleItem = ScheduleItem.load(BIGS.globalProperties.getPreparedDataSource(), currentScheduleItem.getSchedule(), currentScheduleItem.getRowKey());
+                                	if (!storedScheduleItem.getUuidStored().equals(Core.myUUID)) {
+                                		Log.error("current schedule item has been updated by another worker. stopping whenever possible. ");
+                                	} else if (currentScheduleItem!=null) {
+                                		worker.currentScheduleItem.markAlive(bigsDataSource);                           
                                 	}
                                 }
-                                Log.debug("worker alive updated in evaluation "+worker.currentEvaluation.getRowKey());
+                                Log.debug("worker alive updated in schedule item "+worker.currentScheduleItem.getRowKey());
                         }
                 }               
         }

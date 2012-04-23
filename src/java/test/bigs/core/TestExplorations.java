@@ -12,9 +12,7 @@ import org.junit.Test;
 
 import bigs.api.storage.DataSource;
 import bigs.core.BIGS;
-import bigs.core.explorations.Evaluation;
-import bigs.core.explorations.Pipeline;
-import bigs.core.explorations.ExplorationStage;
+import bigs.core.pipelines.Pipeline;
 import bigs.core.utils.Core;
 import bigs.core.utils.Log;
 
@@ -83,7 +81,7 @@ public class TestExplorations {
 	
 	@AfterClass
 	public static void cleanup() {
-		DataSource dataSource = BIGS.globalProperties.getConfiguredDataSource();
+		DataSource dataSource = BIGS.globalProperties.getPreparedDataSource();
 //		dataSource.dropTable(ExplorationProperties.tableName);
 //		dataSource.dropTable(Evaluation.tableName);
 //		Log.info("tables for explorations and evaluations dropped");
