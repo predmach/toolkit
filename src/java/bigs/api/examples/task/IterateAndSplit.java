@@ -9,9 +9,9 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import bigs.api.core.BIGSParam;
+import bigs.api.data.DataItem;
+import bigs.api.data.LLDDataItem;
 import bigs.api.exceptions.BIGSException;
-import bigs.core.data.DataItem;
-import bigs.core.data.LLDDataItem;
 import bigs.core.pipelines.Task;
 import bigs.core.pipelines.TaskContainer;
 import bigs.core.utils.Log;
@@ -20,7 +20,7 @@ import bigs.modules.containers.DataPartitionTaskContainer;
 import bigs.modules.containers.IterativeTask;
 import bigs.modules.containers.IterativeTaskContainer;
 
-public class IterateAndSplit implements DataPartitionTask<IterateAndSplitState, DataItem, DataItem>, IterativeTask<IterateAndSplitState, DataItem, DataItem> {
+public class IterateAndSplit implements DataPartitionTask<IterateAndSplitState, LLDDataItem, DataItem>, IterativeTask<IterateAndSplitState, DataItem, DataItem> {
 
 	@BIGSParam
 	public Integer numberOfIterations;
@@ -169,10 +169,21 @@ public class IterateAndSplit implements DataPartitionTask<IterateAndSplitState, 
 	}
 
 	@Override
-	public DataItem processPartitionDataItem(DataItem item) {
+	public DataItem processPartitionDataItem(LLDDataItem item) {
 		// TODO Auto-generated method stub
 		return item;
 	}
+
+	@Override
+	public Boolean acceptsEmptyDataItemForIterative(DataItem dataItem) {
+		return true;
+	}
+
+	@Override
+	public Boolean acceptsEmptyDataItemForPartition(LLDDataItem dataItem) {
+		return true;
+	}
+
 
 
 }

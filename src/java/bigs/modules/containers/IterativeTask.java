@@ -2,7 +2,7 @@ package bigs.modules.containers;
 
 import java.util.List;
 
-import bigs.core.data.DataItem;
+import bigs.api.data.DataItem;
 import bigs.core.pipelines.State;
 import bigs.core.pipelines.Task;
 
@@ -23,5 +23,5 @@ public interface IterativeTask<S extends State, I extends DataItem, O extends Da
 	
 	public S finalizeDataBlock();
 	
-	
+	public Boolean acceptsEmptyDataItemForIterative(I dataItem);	
 }

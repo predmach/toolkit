@@ -11,6 +11,7 @@ import java.util.Map;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import bigs.api.core.BIGSParam;
+import bigs.api.data.DataItem;
 import bigs.api.exceptions.BIGSException;
 import bigs.api.storage.DataSource;
 import bigs.api.storage.Get;
@@ -19,7 +20,6 @@ import bigs.api.storage.Result;
 import bigs.api.storage.Table;
 import bigs.api.utils.TextUtils;
 import bigs.core.BIGS;
-import bigs.core.data.DataItem;
 import bigs.core.utils.Core;
 import bigs.core.utils.Data;
 import bigs.core.utils.Text;

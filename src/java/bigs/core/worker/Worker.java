@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 
+import bigs.api.data.DataItem;
 import bigs.api.exceptions.BIGSException;
 import bigs.api.storage.DataSource;
 import bigs.api.storage.Put;
@@ -14,7 +15,6 @@ import bigs.api.storage.Scan;
 import bigs.api.storage.Table;
 import bigs.core.BIGS;
 import bigs.core.BIGSProperties;
-import bigs.core.data.DataItem;
 import bigs.core.pipelines.Pipeline;
 import bigs.core.pipelines.PipelineStage;
 import bigs.core.pipelines.Schedule;

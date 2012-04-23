@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 
+import bigs.api.data.DataItem;
 import bigs.api.exceptions.BIGSException;
 import bigs.api.storage.DataSource;
 import bigs.api.storage.Result;
@@ -11,7 +12,6 @@ import bigs.api.storage.ResultScanner;
 import bigs.api.storage.Scan;
 import bigs.api.storage.Table;
 import bigs.api.storage.Update;
-import bigs.core.data.DataItem;
 import bigs.core.pipelines.Pipeline;
 import bigs.core.pipelines.PipelineStage;
 import bigs.core.pipelines.Schedule;
@@ -71,16 +71,30 @@ public class PipelinePrepare extends Command {
 		scan.addFamily("tags");
 		scan.addFamily("bigs");
 		ResultScanner rs = table.getScan(scan);
-		String tagPrefix = Text.zeroPad(new Long(stage.getPipeline().getPipelineNumber()), 5)
-						   +"."+
-						   Text.zeroPad(new Long(stage.getStageNumber()), 5);
 		try {
 			for (Result rr = rs.next(); rr!=null; rr = rs.next()) {					
+				
+				DataItem dataItem = DataItem.fromResult(rr, DataItem.EMPTY_OBJECT);
+				
 				String key = rr.getRowKey();
 		    	Update update = table.createUpdateObject(key);
 
 		    	List<TaskContainer<? extends Task>> containers = stage.getPreparedTask().getTaskContainerCascade();
-		    	for (TaskContainer<? extends Task> container: containers) {
+
+		    	// last task container must accept the data item
+		    	TaskContainer<? extends Task> lastContainer = containers.get(containers.size()-1);
+		    	
+	    		Task preparedTask = stage.getPreparedTask();
+	    		try {
+	    			Boolean accepts = lastContainer.acceptsEmptyDataItem(preparedTask, dataItem);
+	    			if (!accepts) throw new BIGSException("refused by Task definition");
+	    		} catch (BIGSException e) {
+	    			throw new BIGSException("data item "+key+", not accepted by "+preparedTask.getClass().getName()+", "+e.getMessage());
+	    		}
+
+	    		for (TaskContainer<? extends Task> container: containers) {
+		    		
+		    		
 		    		container.setPipelineStage(stage);
 		    		Map<String, String> tags = container.getFQNDataItemTags(key);
 		    		if (tags!=null) {

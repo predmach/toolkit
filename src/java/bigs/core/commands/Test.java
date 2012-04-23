@@ -12,6 +12,7 @@ import java.util.Properties;
 
 
 import bigs.api.core.Algorithm;
+import bigs.api.data.DataItem;
 import bigs.api.examples.task.IterateAndSplit;
 import bigs.api.exceptions.BIGSException;
 import bigs.api.storage.DataSource;
@@ -22,7 +23,6 @@ import bigs.api.storage.ResultScanner;
 import bigs.api.storage.Scan;
 import bigs.api.storage.Table;
 import bigs.core.BIGS;
-import bigs.core.data.DataItem;
 import bigs.core.pipelines.Pipeline;
 import bigs.core.pipelines.PipelineStage;
 import bigs.core.pipelines.Schedule;

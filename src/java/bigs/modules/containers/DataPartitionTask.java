@@ -2,7 +2,7 @@ package bigs.modules.containers;
 
 import java.util.List;
 
-import bigs.core.data.DataItem;
+import bigs.api.data.DataItem;
 import bigs.core.pipelines.State;
 import bigs.core.pipelines.Task;
 
@@ -22,5 +22,7 @@ public interface DataPartitionTask<S extends State, I extends DataItem, O extend
 	public S beforeProcessingAllPartitions(S previousState);
 	
 	public S afterProcessingAllPartitions(List<S> previousStates);
+	
+	public Boolean acceptsEmptyDataItemForPartition(I dataItem);	
 	
 }

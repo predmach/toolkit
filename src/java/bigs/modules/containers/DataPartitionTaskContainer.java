@@ -10,8 +10,8 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import bigs.api.core.BIGSParam;
+import bigs.api.data.DataItem;
 import bigs.api.exceptions.BIGSException;
-import bigs.core.data.DataItem;
 import bigs.core.pipelines.State;
 import bigs.core.pipelines.TaskContainer;
 
@@ -145,5 +145,10 @@ public class DataPartitionTaskContainer extends TaskContainer<DataPartitionTask<
 		} catch (ParseException e) {
 			throw new BIGSException("error parsing JSON representation of "+this.getClass().getName());
 		}
+	}
+
+	@Override
+	public <D extends DataItem> Boolean acceptsEmptyDataItem(DataPartitionTask<State,DataItem,DataItem> configuredTask, D dataItem) {
+		return configuredTask.acceptsEmptyDataItemForPartition(dataItem);
 	}
 }

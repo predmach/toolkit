@@ -3,7 +3,7 @@ package bigs.core.pipelines;
 import java.util.List;
 import java.util.Map;
 
-import bigs.core.data.DataItem;
+import bigs.api.data.DataItem;
 
 
 public class TopLevelTaskContainer extends TaskContainer<Task> {
@@ -84,4 +84,8 @@ public class TopLevelTaskContainer extends TaskContainer<Task> {
 	public void fromTextRepresentation(String textRepresentation) {
 	}
 
+	@Override
+	public <D extends DataItem> Boolean acceptsEmptyDataItem(Task configuredTask, D dataItem) {
+		return true;
+	}
 }

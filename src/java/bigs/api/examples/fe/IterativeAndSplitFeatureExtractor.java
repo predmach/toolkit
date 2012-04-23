@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import bigs.api.core.BIGSParam;
-import bigs.core.data.LLDDataItem;
-import bigs.core.data.RawDataItem;
+import bigs.api.data.LLDDataItem;
+import bigs.api.data.RawDataItem;
 import bigs.core.pipelines.State;
 import bigs.core.pipelines.Task;
 import bigs.core.pipelines.TaskContainer;
@@ -81,6 +81,11 @@ public class IterativeAndSplitFeatureExtractor implements DataPartitionTask<Stat
 	public LLDDataItem processPartitionDataItem(RawDataItem item) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public Boolean acceptsEmptyDataItemForPartition(RawDataItem dataItem) {
+		return true;
 	}
 
 

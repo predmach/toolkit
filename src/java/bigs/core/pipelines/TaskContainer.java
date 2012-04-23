@@ -10,10 +10,10 @@ import java.util.Properties;
 
 import bigs.api.core.BIGSParam;
 import bigs.api.core.Configurable;
+import bigs.api.data.DataItem;
 import bigs.api.exceptions.BIGSException;
 import bigs.api.storage.Put;
 import bigs.api.storage.Result;
-import bigs.core.data.DataItem;
 import bigs.core.exceptions.BIGSPropertyNotFoundException;
 import bigs.core.utils.Core;
 import bigs.core.utils.Text;
@@ -37,7 +37,8 @@ public abstract class TaskContainer<T extends Task> implements Configurable, Tex
 	public abstract State processPreSubContainers(T preparedTask, State previousState);
 	
 	public abstract State processPostSubContainers(T preparedTask, State previousState);
-		
+	
+	public abstract <D extends DataItem> Boolean acceptsEmptyDataItem(T preparedTask, D dataItem);
 	
 	public abstract State processPreLoop(T preparedTask, State previousState);
 	
@@ -53,11 +54,11 @@ public abstract class TaskContainer<T extends Task> implements Configurable, Tex
 	public abstract <I extends DataItem> DataItem processDataItem(T preparedTask, I dataItem);
 
 	public abstract State processPostDataBlock(T preparedTask);
-			
-	
+				
 	public List<TaskContainer<? extends Task>> getTaskContainers() {
 		return taskContainers;
 	}
+	
 		
 	public void addTaskContainer(TaskContainer<? extends Task> taskContainer) {
 		taskContainers.add(taskContainer);
