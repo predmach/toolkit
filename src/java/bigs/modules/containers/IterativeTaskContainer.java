@@ -9,11 +9,12 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import bigs.api.core.BIGSException;
 import bigs.api.core.BIGSParam;
+import bigs.api.core.State;
+import bigs.api.core.TaskContainer;
 import bigs.api.data.DataItem;
-import bigs.api.exceptions.BIGSException;
-import bigs.core.pipelines.State;
-import bigs.core.pipelines.TaskContainer;
+import bigs.api.tasks.IterativeTask;
 
 public class IterativeTaskContainer extends TaskContainer<IterativeTask<State,DataItem,DataItem>> {
 

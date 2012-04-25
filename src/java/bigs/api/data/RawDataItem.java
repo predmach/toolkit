@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import net.sf.jmimemagic.Magic;
-import bigs.api.exceptions.BIGSException;
+import bigs.api.core.BIGSException;
 import bigs.api.utils.TextUtils;
 import bigs.core.utils.Data;
 public class RawDataItem extends DataItem {

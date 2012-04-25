@@ -8,19 +8,19 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import bigs.api.core.BIGSException;
 import bigs.api.core.BIGSParam;
+import bigs.api.core.Task;
+import bigs.api.core.TaskContainer;
 import bigs.api.data.DataItem;
 import bigs.api.data.LLDDataItem;
-import bigs.api.exceptions.BIGSException;
-import bigs.core.pipelines.Task;
-import bigs.core.pipelines.TaskContainer;
+import bigs.api.tasks.DataPartitionTask;
+import bigs.api.tasks.IterativeTask;
 import bigs.core.utils.Log;
-import bigs.modules.containers.DataPartitionTask;
 import bigs.modules.containers.DataPartitionTaskContainer;
-import bigs.modules.containers.IterativeTask;
 import bigs.modules.containers.IterativeTaskContainer;
 
-public class IterateAndSplit implements DataPartitionTask<IterateAndSplitState, LLDDataItem, DataItem>, IterativeTask<IterateAndSplitState, DataItem, DataItem> {
+public class IterateAndSplit implements DataPartitionTask<IterateAndSplitState, LLDDataItem, LLDDataItem>, IterativeTask<IterateAndSplitState, DataItem, DataItem> {
 
 	@BIGSParam
 	public Integer numberOfIterations;
@@ -30,7 +30,7 @@ public class IterateAndSplit implements DataPartitionTask<IterateAndSplitState, 
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	public String toTextRepresentation() {
+	public String toTextRepresentation() {	 
 		JSONObject obj = new JSONObject();
 		obj.put("iterations", this.numberOfIterations);
 		obj.put("partitions", this.numberOfPartitions);
@@ -169,9 +169,19 @@ public class IterateAndSplit implements DataPartitionTask<IterateAndSplitState, 
 	}
 
 	@Override
-	public DataItem processPartitionDataItem(LLDDataItem item) {
-		// TODO Auto-generated method stub
-		return item;
+	public LLDDataItem processPartitionDataItem(LLDDataItem item) {
+		Double accum = 0D;
+		for (List<Double> l: item.getLLD()) {
+			for (Double d: l) {
+				accum = accum + d;
+			}
+		}
+		
+		List<Double> rl = new ArrayList<Double>();
+		rl.add(accum);
+		LLDDataItem r = new LLDDataItem();
+		r.addLD(rl);		
+		return r;
 	}
 
 	@Override
@@ -182,6 +192,11 @@ public class IterateAndSplit implements DataPartitionTask<IterateAndSplitState, 
 	@Override
 	public Boolean acceptsEmptyDataItemForPartition(LLDDataItem dataItem) {
 		return true;
+	}
+
+	@Override
+	public String getDescription() {
+		return "sample iterate and split task";
 	}
 
 

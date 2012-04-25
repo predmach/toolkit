@@ -16,7 +16,7 @@ import java.awt.FlowLayout;
 
 import javax.swing.JLabel;
 
-import bigs.api.exceptions.BIGSException;
+import bigs.api.core.BIGSException;
 import bigs.core.BIGS;
 import bigs.core.BIGSProperties;
 import bigs.core.utils.Core;

@@ -3,6 +3,9 @@ package bigs.core.pipelines;
 import java.util.List;
 import java.util.Map;
 
+import bigs.api.core.State;
+import bigs.api.core.Task;
+import bigs.api.core.TaskContainer;
 import bigs.api.data.DataItem;
 
 

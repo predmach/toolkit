@@ -1,4 +1,4 @@
-package bigs.api.exceptions;
+package bigs.api.core;
 
 public class BIGSException extends RuntimeException {
 

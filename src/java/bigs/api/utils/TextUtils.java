@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import bigs.api.exceptions.BIGSException;
+import bigs.api.core.BIGSException;
 
 
 /**

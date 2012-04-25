@@ -1,4 +1,4 @@
-package bigs.core.pipelines;
+package bigs.api.core;
 
 public interface TextSerializable {
 	

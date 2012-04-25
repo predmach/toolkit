@@ -17,7 +17,7 @@ import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.servlet.ServletHandler;
 
-import bigs.api.exceptions.BIGSException;
+import bigs.api.core.BIGSException;
 import bigs.core.BIGS;
 import bigs.core.utils.Log;
 

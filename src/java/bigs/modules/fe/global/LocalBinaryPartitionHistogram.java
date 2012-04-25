@@ -14,9 +14,8 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 
-import bigs.api.core.Algorithm;
 import bigs.api.core.BIGSParam;
-import bigs.api.featureextraction.FeatureExtractionAlgorithm;
+import bigs.api.fe.FeatureExtractionTask;
 import bigs.api.utils.TextUtils;
 import bigs.modules.fe.utils.*;
 
@@ -35,7 +34,7 @@ import bigs.modules.fe.utils.*;
  * @copyright 	Copyright 2007-2012 (c) BioIngenium Research Group - Universidad Nacional de Colombia
  */
 
-public class LocalBinaryPartitionHistogram extends FeatureExtractionAlgorithm {
+public class LocalBinaryPartitionHistogram extends FeatureExtractionTask {
 	
 	private Hashtable<String, MyInteger> countingTable;
 	private int width;
@@ -148,11 +147,6 @@ public class LocalBinaryPartitionHistogram extends FeatureExtractionAlgorithm {
         }
     }
 
-	@Override
-	public Integer outputDataRowkeyPrefix() {
-		return Algorithm.ROWKEYPREFIX_EXPLORATION_CONFIG_STAGE;
-	}
-	
 	/**
      * This class was created because the original class Integer hasn't an add or increment method When I access this numbers in the Hashtable, I need to increment it directly, I don't want to extract it, to increment it alone and to put it again overcalculating hash functions...
      */

@@ -3,7 +3,9 @@ package bigs.core.pipelines;
 import java.util.ArrayList;
 import java.util.List;
 
-import bigs.api.exceptions.BIGSException;
+import bigs.api.core.BIGSException;
+import bigs.api.core.Task;
+import bigs.api.core.TaskContainer;
 import bigs.api.storage.DataSource;
 import bigs.core.exceptions.BIGSPropertyNotFoundException;
 import bigs.core.utils.Core;
@@ -26,6 +28,8 @@ public class PipelineStage {
 		this.pipeline = exploration;
 		stagePrefix = lprefix+"."+Text.zeroPad(new Long(stageNumber), 2);
 		try {
+			Object obj = Core.getPreparedObject("task", Task.class, exploration, stagePrefix);
+			System.out.println("class is "+obj.getClass().getName());
 			this.preparedTask = Core.getPreparedObject("task", Task.class, exploration, stagePrefix);
 		} catch (BIGSPropertyNotFoundException e) {
 			throw new BIGSException(e.getMessage());

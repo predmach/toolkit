@@ -2,12 +2,12 @@ package bigs.api.data;
 
 import java.util.Map;
 
-import bigs.api.exceptions.BIGSException;
+import bigs.api.core.BIGSException;
+import bigs.api.core.TextSerializable;
 import bigs.api.storage.DataSource;
 import bigs.api.storage.Put;
 import bigs.api.storage.Result;
 import bigs.api.storage.Table;
-import bigs.core.pipelines.TextSerializable;
 import bigs.core.utils.Core;
 import bigs.core.utils.Data;
 import bigs.core.utils.Network;

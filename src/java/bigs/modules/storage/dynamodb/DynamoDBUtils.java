@@ -8,7 +8,7 @@ import java.util.Date;
 import org.apache.commons.io.IOUtils;
 
 
-import bigs.api.exceptions.BIGSException;
+import bigs.api.core.BIGSException;
 
 import com.amazonaws.services.dynamodb.model.AttributeValue;
 import com.amazonaws.services.s3.model.AmazonS3Exception;

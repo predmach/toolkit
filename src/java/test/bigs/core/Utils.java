@@ -1,6 +1,6 @@
 package test.bigs.core;
 
-import bigs.api.exceptions.BIGSException;
+import bigs.api.core.BIGSException;
 import bigs.api.storage.DataSource;
 import bigs.core.BIGS;
 import bigs.core.BIGSProperties;

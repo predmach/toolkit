@@ -6,7 +6,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.util.Bytes;
 
-import bigs.api.exceptions.BIGSException;
+import bigs.api.core.BIGSException;
 import bigs.api.storage.Get;
 import bigs.api.storage.Put;
 import bigs.api.storage.Result;

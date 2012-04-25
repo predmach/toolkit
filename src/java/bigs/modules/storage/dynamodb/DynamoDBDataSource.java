@@ -7,8 +7,8 @@ import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.List;
 
+import bigs.api.core.BIGSException;
 import bigs.api.core.BIGSParam;
-import bigs.api.exceptions.BIGSException;
 import bigs.api.storage.DataSource;
 import bigs.api.storage.Table;
 import bigs.core.BIGS;

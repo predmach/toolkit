@@ -14,9 +14,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import bigs.api.core.Algorithm;
 import bigs.api.core.BIGSParam;
-import bigs.api.featureextraction.FeatureExtractionAlgorithm;
+import bigs.api.fe.FeatureExtractionTask;
 import bigs.api.utils.TextUtils;
 import bigs.modules.fe.global.lire.fcth.FCTHQuant;
 import bigs.modules.fe.global.lire.fcth.Fuzzy10Bin;
@@ -40,7 +39,7 @@ import bigs.modules.fe.utils.*;
  * @copyright 	Copyright 2007-2012 (c) BioIngenium Research Group - Universidad Nacional de Colombia
  */
 
-public class LireFCTH extends FeatureExtractionAlgorithm {
+public class LireFCTH extends FeatureExtractionTask {
 	public boolean Compact = false;
 	
 	@Override
@@ -335,10 +334,5 @@ public class LireFCTH extends FeatureExtractionAlgorithm {
         return TempMatrix;
 
     }
-
-	@Override
-	public Integer outputDataRowkeyPrefix() {
-		return Algorithm.ROWKEYPREFIX_EXPLORATION_CONFIG_STAGE;
-	}
 
 }

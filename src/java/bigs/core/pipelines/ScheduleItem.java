@@ -10,9 +10,12 @@ import java.util.Map;
 
 import org.apache.hadoop.hbase.util.Bytes;
 
+import bigs.api.core.BIGSException;
 import bigs.api.core.BIGSParam;
+import bigs.api.core.State;
+import bigs.api.core.Task;
+import bigs.api.core.TaskContainer;
 import bigs.api.data.DataItem;
-import bigs.api.exceptions.BIGSException;
 import bigs.api.storage.DataSource;
 import bigs.api.storage.Get;
 import bigs.api.storage.Put;
@@ -37,7 +40,7 @@ public class ScheduleItem {
 	public static Integer STATUS_DONE        = 2;
 	public static Integer STATUS_FAILED      = 3;
 	
-	public static String METHOD_PRESUBCONTAINERS = "preSubConteiners";
+	public static String METHOD_PRESUBCONTAINERS = "preSubContainers";
 	public static String METHOD_POSTSUBCONTAINERS = "postSubContainers";
 	public static String METHOD_PRELOOP          = "preLoop";
 	public static String METHOD_POSTLOOP         = "postLoop";

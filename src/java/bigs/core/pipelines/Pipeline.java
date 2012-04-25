@@ -15,9 +15,9 @@ import java.util.Properties;
 import org.apache.hadoop.hbase.util.Bytes;
 
 
+import bigs.api.core.BIGSException;
 import bigs.api.core.Configurable;
 import bigs.api.core.BIGSParam;
-import bigs.api.exceptions.BIGSException;
 import bigs.api.storage.DataSource;
 import bigs.api.storage.Get;
 import bigs.api.storage.Put;

@@ -5,7 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 
-import bigs.api.exceptions.BIGSException;
+import bigs.api.core.BIGSException;
 import bigs.core.pipelines.Pipeline;
 import bigs.core.utils.Log;
 

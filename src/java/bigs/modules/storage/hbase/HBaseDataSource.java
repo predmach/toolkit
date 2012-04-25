@@ -10,8 +10,8 @@ import org.apache.hadoop.hbase.MasterNotRunningException;
 import org.apache.hadoop.hbase.ZooKeeperConnectionException;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 
+import bigs.api.core.BIGSException;
 import bigs.api.core.BIGSParam;
-import bigs.api.exceptions.BIGSException;
 import bigs.api.storage.DataSource;
 import bigs.api.storage.Table;
 import bigs.core.BIGS;

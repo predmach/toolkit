@@ -5,10 +5,10 @@ import java.util.List;
 
 import bigs.api.core.Algorithm;
 import bigs.api.core.BIGSParam;
-import bigs.api.featureextraction.FeatureExtractionAlgorithm;
+import bigs.api.fe.FeatureExtractionTask;
 import bigs.api.utils.TextUtils;
 
-public class MyFeaturesExtractor extends FeatureExtractionAlgorithm {
+public class MyFeaturesExtractor extends FeatureExtractionTask {
 
 	@BIGSParam
 	public Double myParam1=0.0;

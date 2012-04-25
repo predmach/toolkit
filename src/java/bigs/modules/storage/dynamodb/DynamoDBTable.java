@@ -5,7 +5,7 @@ import java.io.ByteArrayInputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-import bigs.api.exceptions.BIGSException;
+import bigs.api.core.BIGSException;
 import bigs.api.storage.Get;
 import bigs.api.storage.Put;
 import bigs.api.storage.Result;

@@ -3,14 +3,13 @@ package bigs.api.examples.fe;
 import java.util.ArrayList;
 import java.util.List;
 
-import bigs.api.core.Algorithm;
 import bigs.api.core.BIGSParam;
-import bigs.api.featureextraction.FeatureExtractionAlgorithm;
+import bigs.api.fe.FeatureExtractionTask;
 import bigs.api.utils.TextUtils;
 import bigs.core.utils.Core;
 
 
-public class RandomTimeFeaturesExtractor extends FeatureExtractionAlgorithm {
+public class RandomTimeFeaturesExtractor extends FeatureExtractionTask {
 
 	@BIGSParam(description="minimum computing time (in secs)")
 	public Long minTime=0L;
@@ -46,11 +45,6 @@ public class RandomTimeFeaturesExtractor extends FeatureExtractionAlgorithm {
 		r.add(v);
 		
 		return r;
-	}
-
-	@Override
-	public Integer outputDataRowkeyPrefix() {
-		return Algorithm.ROWKEYPREFIX_EXPLORATION_CONFIG_STAGE;
 	}
 	
 	

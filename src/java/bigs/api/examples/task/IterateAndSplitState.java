@@ -6,9 +6,9 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import bigs.api.exceptions.BIGSException;
-import bigs.core.pipelines.State;
-import bigs.core.pipelines.TextSerializable;
+import bigs.api.core.BIGSException;
+import bigs.api.core.State;
+import bigs.api.core.TextSerializable;
 
 
 public class IterateAndSplitState extends State {

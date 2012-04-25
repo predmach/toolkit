@@ -14,9 +14,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import bigs.api.core.Algorithm;
 import bigs.api.core.BIGSParam;
-import bigs.api.featureextraction.FeatureExtractionAlgorithm;
+import bigs.api.fe.FeatureExtractionTask;
 import bigs.api.utils.TextUtils;
 import bigs.modules.fe.global.mpeg7.ColorLayout;
 import bigs.modules.fe.utils.*;
@@ -35,7 +34,7 @@ import bigs.modules.fe.utils.*;
  * @copyright 	Copyright 2007-2012 (c) BioIngenium Research Group - Universidad Nacional de Colombia
  */
 
-public class MPEG7ColorLayout extends FeatureExtractionAlgorithm {
+public class MPEG7ColorLayout extends FeatureExtractionTask {
 	// TODO: aacruzr: This feature is not ready to use it
 	@Override
 	public String toString() {
@@ -69,11 +68,6 @@ public class MPEG7ColorLayout extends FeatureExtractionAlgorithm {
         //BufferedImage imgaux = ImageUtil.scaleToSize(100, 100, CL.getColorLayoutImage());
         //data.setImageMatrix(imgaux);        
 		return data;
-	}
-
-	@Override
-	public Integer outputDataRowkeyPrefix() {
-		return Algorithm.ROWKEYPREFIX_EXPLORATION_CONFIG_STAGE;
 	}
 
 }

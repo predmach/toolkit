@@ -11,12 +11,22 @@ public class LLDDataItem extends DataItem {
 
 	List<List<Double>> data = new ArrayList<List<Double>>();
 
+	public LLDDataItem() {}
+	
+	public LLDDataItem(List<List<Double>> data) {
+		this.data = data;
+	}
+	
 	public List<List<Double>> getLLD() {
 		return this.data;
 	}
 	
 	public void setLLD(List<List<Double>> data) {
 		this.data = data;
+	}
+	
+	public void addLD(List<Double> list) {
+		data.add(list);
 	}
 	
 	@Override

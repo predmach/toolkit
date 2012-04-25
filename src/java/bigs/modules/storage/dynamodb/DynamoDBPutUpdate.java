@@ -7,7 +7,7 @@ import org.eclipse.jetty.util.log.Log;
 
 
 
-import bigs.api.exceptions.BIGSException;
+import bigs.api.core.BIGSException;
 import bigs.api.storage.Put;
 import bigs.api.storage.Update;
 

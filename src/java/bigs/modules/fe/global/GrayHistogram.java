@@ -1,17 +1,9 @@
 package bigs.modules.fe.global;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import bigs.api.core.Algorithm;
-import bigs.api.core.BIGSParam;
-import bigs.api.featureextraction.FeatureExtractionAlgorithm;
-import bigs.api.utils.TextUtils;
+import bigs.api.fe.FeatureExtractionTask;
 import bigs.modules.fe.utils.*;
 
 
@@ -29,7 +21,7 @@ import bigs.modules.fe.utils.*;
  * @copyright 	Copyright 2007-2012 (c) BioIngenium Research Group - Universidad Nacional de Colombia
  */
 
-public class GrayHistogram extends FeatureExtractionAlgorithm {
+public class GrayHistogram extends FeatureExtractionTask {
 	
 	@Override
 	public String toString() {
@@ -51,11 +43,6 @@ public class GrayHistogram extends FeatureExtractionAlgorithm {
             descriptor.add((double)values[i]);		
         data.add(descriptor);
 		return data;
-	}
-
-	@Override
-	public Integer outputDataRowkeyPrefix() {
-		return Algorithm.ROWKEYPREFIX_EXPLORATION_CONFIG_STAGE;
 	}
 
 }

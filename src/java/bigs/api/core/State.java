@@ -1,6 +1,5 @@
-package bigs.core.pipelines;
+package bigs.api.core;
 
-import bigs.api.exceptions.BIGSException;
 import bigs.api.storage.Put;
 import bigs.api.storage.Result;
 

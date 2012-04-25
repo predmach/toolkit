@@ -6,9 +6,8 @@ import ij.process.ImageProcessor;
 import java.util.ArrayList;
 import java.util.List;
 
-import bigs.api.core.Algorithm;
 import bigs.api.core.BIGSParam;
-import bigs.api.featureextraction.FeatureExtractionAlgorithm;
+import bigs.api.fe.FeatureExtractionTask;
 import bigs.modules.fe.utils.*;
 
 
@@ -25,7 +24,7 @@ import bigs.modules.fe.utils.*;
  * @copyright 	Copyright 2007-2012 (c) BioIngenium Research Group - Universidad Nacional de Colombia
  */
 
-public class RegularBlock extends FeatureExtractionAlgorithm {
+public class RegularBlock extends FeatureExtractionTask {
 
 	@BIGSParam	  
     public Integer blockSize = 9;
@@ -80,11 +79,6 @@ public class RegularBlock extends FeatureExtractionAlgorithm {
         return getBlocks(ip.getProcessor());
 	}
 
-	@Override
-	public Integer outputDataRowkeyPrefix() {
-		return Algorithm.ROWKEYPREFIX_EXPLORATION_CONFIG_STAGE;
-	}
-	
 	public List<List<Double>> getBlocks(ImageProcessor ip1) {
 		List<Double> vector = new ArrayList<Double>();
 		List<List<Double>> matrix = new ArrayList<List<Double>>();

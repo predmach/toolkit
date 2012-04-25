@@ -2,7 +2,7 @@ package bigs.modules.storage.hbase;
 
 import java.io.IOException;
 
-import bigs.api.exceptions.BIGSException;
+import bigs.api.core.BIGSException;
 import bigs.api.storage.Result;
 import bigs.api.storage.ResultScanner;
 

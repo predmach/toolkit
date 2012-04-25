@@ -1,12 +1,13 @@
-stage.01.task: bigs.modules.fe.global.RGBHistogram
+stage.01.task: bigs.api.examples.task.IterateAndSplit
 
 stage.01.input.source: bigs.modules.storage.hbase.HBaseDataSource
 stage.01.input.HBaseDataSource.zookeeperServerList: localhost
-stage.01.input.table: imgs
+stage.01.input.table: datasets
 
 stage.01.output.source: bigs.modules.storage.hbase.HBaseDataSource
 stage.01.output.HBaseDataSource.zookeeperServerList: localhost
-stage.01.output.table: datasets
+stage.01.output.table: datasets2
 
-stage.01.RGBHistogram.rangeSize: 100
-stage.01.RGBHistogram.numberOfPartitions: 2
+stage.01.IterateAndSplit.numberOfIterations: 2
+stage.01.IterateAndSplit.numberOfPartitions: 2
+

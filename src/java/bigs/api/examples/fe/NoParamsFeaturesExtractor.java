@@ -3,11 +3,10 @@ package bigs.api.examples.fe;
 import java.util.ArrayList;
 import java.util.List;
 
-import bigs.api.core.Algorithm;
-import bigs.api.featureextraction.FeatureExtractionAlgorithm;
+import bigs.api.fe.FeatureExtractionTask;
 
 
-public class NoParamsFeaturesExtractor extends FeatureExtractionAlgorithm {
+public class NoParamsFeaturesExtractor extends FeatureExtractionTask {
 
 	@Override
 	public String toString() {
@@ -42,9 +41,8 @@ public class NoParamsFeaturesExtractor extends FeatureExtractionAlgorithm {
 	}
 
 	@Override
-	public Integer outputDataRowkeyPrefix() {
-		return Algorithm.ROWKEYPREFIX_EXPLORATION_CONFIG_STAGE;
+	public String getDescription() {
+		return "example no params feature extractor";
 	}
-	
 	
 }

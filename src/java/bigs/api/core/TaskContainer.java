@@ -1,4 +1,4 @@
-package bigs.core.pipelines;
+package bigs.api.core;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -8,13 +8,13 @@ import java.util.Map;
 import java.util.Properties;
 
 
-import bigs.api.core.BIGSParam;
-import bigs.api.core.Configurable;
 import bigs.api.data.DataItem;
-import bigs.api.exceptions.BIGSException;
 import bigs.api.storage.Put;
 import bigs.api.storage.Result;
 import bigs.core.exceptions.BIGSPropertyNotFoundException;
+import bigs.core.pipelines.PipelineStage;
+import bigs.core.pipelines.Schedule;
+import bigs.core.pipelines.ScheduleItem;
 import bigs.core.utils.Core;
 import bigs.core.utils.Text;
 
@@ -98,9 +98,9 @@ public abstract class TaskContainer<T extends Task> implements Configurable, Tex
 		String stageNumber = "NONE";
 		String pipelineNumber = "NONE";
 		if (this.pipelineStage!=null) {
-			stageNumber = Text.zeroPad(new Long(this.pipelineStage.stageNumber),5);
-			if (this.pipelineStage.pipeline!=null) {
-				pipelineNumber = Text.zeroPad(new Long(this.pipelineStage.pipeline.getPipelineNumber()), 5);
+			stageNumber = Text.zeroPad(new Long(this.pipelineStage.getStageNumber()),5);
+			if (this.pipelineStage.getPipeline()!=null) {
+				pipelineNumber = Text.zeroPad(new Long(this.pipelineStage.getPipeline().getPipelineNumber()), 5);
 			}
 		}
 		
@@ -158,11 +158,11 @@ public abstract class TaskContainer<T extends Task> implements Configurable, Tex
 		
 		// recurses over the existing subcontainers
 		if (!this.taskContainers.isEmpty()) {
-			ScheduleItem p1 = new ScheduleItem(schedule, this, pipelineStage.preparedTask, ScheduleItem.METHOD_PRESUBCONTAINERS);
+			ScheduleItem p1 = new ScheduleItem(schedule, this, pipelineStage.getPreparedTask(), ScheduleItem.METHOD_PRESUBCONTAINERS);
 			if (parentScheduleItem!=null) p1.addParentId(parentScheduleItem.getId());
 
 			TaskContainer<? extends Task> th = this.taskContainers.get(0).clone();
-			ScheduleItem p2 = new ScheduleItem(schedule, th, pipelineStage.preparedTask,  ScheduleItem.METHOD_PRELOOP).addParentId(p1.getId());
+			ScheduleItem p2 = new ScheduleItem(schedule, th, pipelineStage.getPreparedTask(),  ScheduleItem.METHOD_PRELOOP).addParentId(p1.getId());
 
 			List<Integer> subContainerParentsIds = new ArrayList<Integer>();
 			if (this.taskContainers.size()>0) {
@@ -181,12 +181,12 @@ public abstract class TaskContainer<T extends Task> implements Configurable, Tex
 				}
 			}
 				
-			ScheduleItem p3 = new ScheduleItem(schedule, th	, pipelineStage.preparedTask, ScheduleItem.METHOD_POSTLOOP).addParentsIds(subContainerParentsIds);
+			ScheduleItem p3 = new ScheduleItem(schedule, th	, pipelineStage.getPreparedTask(), ScheduleItem.METHOD_POSTLOOP).addParentsIds(subContainerParentsIds);
 			
-			ScheduleItem p4 = new ScheduleItem(schedule, this, pipelineStage.preparedTask, ScheduleItem.METHOD_POSTSUBCONTAINERS).addParentId(p3.getId());
+			ScheduleItem p4 = new ScheduleItem(schedule, this, pipelineStage.getPreparedTask(), ScheduleItem.METHOD_POSTSUBCONTAINERS).addParentId(p3.getId());
 			return p4;
 		} else {
-			ScheduleItem p = new ScheduleItem(schedule, this, pipelineStage.preparedTask, ScheduleItem.METHOD_LOOPDATA).addParentId(parentScheduleItem.getId());
+			ScheduleItem p = new ScheduleItem(schedule, this, pipelineStage.getPreparedTask(), ScheduleItem.METHOD_LOOPDATA).addParentId(parentScheduleItem.getId());
 			p.setTags(clonedTags);
 			return p;
 		}

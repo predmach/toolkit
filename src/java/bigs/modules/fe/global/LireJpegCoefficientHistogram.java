@@ -18,9 +18,8 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
-import bigs.api.core.Algorithm;
 import bigs.api.core.BIGSParam;
-import bigs.api.featureextraction.FeatureExtractionAlgorithm;
+import bigs.api.fe.FeatureExtractionTask;
 import bigs.api.utils.TextUtils;
 import bigs.modules.fe.utils.*;
 
@@ -38,7 +37,7 @@ import bigs.modules.fe.utils.*;
  * @copyright 	Copyright 2007-2012 (c) BioIngenium Research Group - Universidad Nacional de Colombia
  */
 
-public class LireJpegCoefficientHistogram extends FeatureExtractionAlgorithm {
+public class LireJpegCoefficientHistogram extends FeatureExtractionTask {
 	
 	private final int BLOCK_SIZE = 8;
 
@@ -226,10 +225,5 @@ public class LireJpegCoefficientHistogram extends FeatureExtractionAlgorithm {
             }
         }
     }
-
-	@Override
-	public Integer outputDataRowkeyPrefix() {
-		return Algorithm.ROWKEYPREFIX_EXPLORATION_CONFIG_STAGE;
-	}
 
 }

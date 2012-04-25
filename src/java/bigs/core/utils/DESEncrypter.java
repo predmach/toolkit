@@ -9,7 +9,7 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.PBEParameterSpec;
 
-import bigs.api.exceptions.BIGSException;
+import bigs.api.core.BIGSException;
 
 
 public class DESEncrypter {

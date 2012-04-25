@@ -28,14 +28,14 @@ import java.util.jar.JarFile;
 import org.apache.commons.net.ntp.NTPUDPClient;
 import org.apache.commons.net.ntp.TimeInfo;
 import org.reflections.Reflections;
+import org.reflections.Store;
 import org.reflections.scanners.SubTypesScanner;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
 
-import bigs.api.core.Algorithm;
+import bigs.api.core.BIGSException;
 import bigs.api.core.Configurable;
 import bigs.api.core.BIGSParam;
-import bigs.api.exceptions.BIGSException;
 import bigs.api.storage.DataSource;
 import bigs.core.BIGS;
 import bigs.core.BIGSProperties;
@@ -382,19 +382,21 @@ public class Core {
      * @return the list of subclasses
      */
     public static <T> List<Class<? extends T>> getAllSubclasses(Class<T> initialClass) {
+
+    	List<Class<? extends T>> r = new ArrayList<Class<? extends T>>();
     	Reflections refl = new Reflections(
   	          new ConfigurationBuilder()
-                .setUrls(ClasspathHelper.forClassLoader())
-                .setScanners(new SubTypesScanner()));
-  	
-	  	Set<Class<? extends T>> s = refl.getSubTypesOf(initialClass);
-	  	List<Class<? extends T>> r = new ArrayList<Class<? extends T>>();
-	  	for (Class<? extends T> c: s) {
-	  		r.add(c);
-	  	}    	
-	  	return r;
-    }
-    
+                .setUrls(ClasspathHelper.forClassLoader()));
+    	Store store = refl.getStore();
+    	Set<String> subClassNames = store.getSubTypesOf(initialClass.getName());
+    	for (String s: subClassNames) {
+    		try {
+				r.add((Class<? extends T>)Class.forName(s));
+			} catch (ClassNotFoundException e) {
+			}
+    	}
+    	return r;
+  	}
     
     static Long timeOffset = null;
 

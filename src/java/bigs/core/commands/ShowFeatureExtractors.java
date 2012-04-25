@@ -3,7 +3,8 @@ package bigs.core.commands;
 import java.lang.reflect.Modifier;
 import java.util.List;
 
-import bigs.api.featureextraction.FeatureExtractionAlgorithm;
+import bigs.api.fe.FeatureExtractionTask;
+import bigs.core.pipelines.TaskHelper;
 import bigs.core.utils.Core;
 import bigs.core.utils.Log;
 
@@ -24,16 +25,21 @@ public class ShowFeatureExtractors  extends Command {
 	public void run(String[] args) throws Exception {		
 		
 		Log.info("scanning libraries ...");
-    	List<Class<? extends FeatureExtractionAlgorithm>> l = Core.getAllSubclasses(FeatureExtractionAlgorithm.class);
-    	for (Class<? extends FeatureExtractionAlgorithm> c: l) {
+		
+		List<Class<? extends FeatureExtractionTask>> l = Core.getAllSubclasses(FeatureExtractionTask.class);
+
+		if (l.size()==0) {
+			Log.info("no classes found");
+		}
+		for (Class<? extends FeatureExtractionTask> c: l) {
     		if (!Modifier.isAbstract(c.getModifiers())) {
-    			FeatureExtractionAlgorithm alg = c.newInstance();
-    			for (String s: alg.getHelp()) {
-    				System.out.println("     "+ s);
+    			FeatureExtractionTask alg = c.newInstance();
+    			for (String ss: TaskHelper.getHelp(alg)) {
+    				System.out.println("     "+ ss);
     			}
-    			System.out.println();
+    			System.out.println();			
     		}
-    	}
+		}
 	}
 
 	@Override

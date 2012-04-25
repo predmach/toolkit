@@ -8,7 +8,7 @@ import java.util.Locale;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 
-import bigs.api.exceptions.BIGSException;
+import bigs.api.core.BIGSException;
 
 
 public class Text {

@@ -13,9 +13,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import bigs.api.core.Algorithm;
 import bigs.api.core.BIGSParam;
-import bigs.api.featureextraction.FeatureExtractionAlgorithm;
+import bigs.api.fe.FeatureExtractionTask;
 import bigs.api.utils.TextUtils;
 import bigs.modules.fe.utils.*;
 
@@ -34,7 +33,7 @@ import bigs.modules.fe.utils.*;
  * @copyright 	Copyright 2007-2012 (c) BioIngenium Research Group - Universidad Nacional de Colombia
  */
 
-public class SobelHistogram extends FeatureExtractionAlgorithm {
+public class SobelHistogram extends FeatureExtractionTask {
 	
 	@BIGSParam
 	public Integer rangeSize=8;	
@@ -67,11 +66,6 @@ public class SobelHistogram extends FeatureExtractionAlgorithm {
 		
         data.add(descriptor);
 		return data;
-	}
-
-	@Override
-	public Integer outputDataRowkeyPrefix() {
-		return Algorithm.ROWKEYPREFIX_EXPLORATION_CONFIG_STAGE;
 	}
 
 }

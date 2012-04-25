@@ -1,10 +1,10 @@
-package bigs.modules.containers;
+package bigs.api.tasks;
 
 import java.util.List;
 
+import bigs.api.core.State;
+import bigs.api.core.Task;
 import bigs.api.data.DataItem;
-import bigs.core.pipelines.State;
-import bigs.core.pipelines.Task;
 
 
 public interface DataPartitionTask<S extends State, I extends DataItem, O extends DataItem> extends Task {

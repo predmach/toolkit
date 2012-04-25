@@ -15,9 +15,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import bigs.api.core.Algorithm;
 import bigs.api.core.BIGSParam;
-import bigs.api.featureextraction.FeatureExtractionAlgorithm;
+import bigs.api.fe.FeatureExtractionTask;
 import bigs.api.utils.TextUtils;
 import bigs.modules.fe.global.lire.ImageUtils;
 import bigs.modules.fe.utils.*;
@@ -36,7 +35,7 @@ import bigs.modules.fe.utils.*;
  * @copyright 	Copyright 2007-2012 (c) BioIngenium Research Group - Universidad Nacional de Colombia
  */
 
-public class LireGabor extends FeatureExtractionAlgorithm {
+public class LireGabor extends FeatureExtractionTask {
 	
 	private double[][][][][] gaborWavelet = null;
     private double U_H = .4;
@@ -266,9 +265,5 @@ public class LireGabor extends FeatureExtractionAlgorithm {
         return Math.pow(A, -m) * (-x * Math.sin(theta[n] + y * Math.cos(theta[n])));
     }
 
-	@Override
-	public Integer outputDataRowkeyPrefix() {
-		return Algorithm.ROWKEYPREFIX_EXPLORATION_CONFIG_STAGE;
-	}
 
 }

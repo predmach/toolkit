@@ -7,7 +7,7 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.Properties;
 
-import bigs.api.exceptions.BIGSException;
+import bigs.api.core.BIGSException;
 import bigs.api.storage.DataSource;
 import bigs.api.utils.TextUtils;
 import bigs.core.exceptions.BIGSPropertyNotFoundException;

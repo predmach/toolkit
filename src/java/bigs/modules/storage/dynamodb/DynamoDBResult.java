@@ -7,7 +7,7 @@ import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 
-import bigs.api.exceptions.BIGSException;
+import bigs.api.core.BIGSException;
 import bigs.api.storage.Result;
 import bigs.core.utils.Log;
 

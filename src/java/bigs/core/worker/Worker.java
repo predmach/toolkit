@@ -5,8 +5,12 @@ import java.util.List;
 import java.util.Map;
 
 
+import bigs.api.core.BIGSException;
+import bigs.api.core.State;
+import bigs.api.core.Task;
+import bigs.api.core.TaskContainer;
+import bigs.api.core.TextSerializable;
 import bigs.api.data.DataItem;
-import bigs.api.exceptions.BIGSException;
 import bigs.api.storage.DataSource;
 import bigs.api.storage.Put;
 import bigs.api.storage.Result;
@@ -19,10 +23,6 @@ import bigs.core.pipelines.Pipeline;
 import bigs.core.pipelines.PipelineStage;
 import bigs.core.pipelines.Schedule;
 import bigs.core.pipelines.ScheduleItem;
-import bigs.core.pipelines.State;
-import bigs.core.pipelines.Task;
-import bigs.core.pipelines.TaskContainer;
-import bigs.core.pipelines.TextSerializable;
 import bigs.core.utils.Core;
 import bigs.core.utils.Data;
 import bigs.core.utils.Log;
@@ -175,7 +175,6 @@ public class Worker {
 				DataItem.createDataTableIfDoesNotExist(outputDataSource, outputDataTableName);
 
 				Table inputTable = inputDataSource.getTable(inputDataTableName);
-				Table outputTable = outputDataSource.getTable(outputDataTableName);
 						
 				Scan scan = inputTable.createScanObject();
 				for (String family: DataItem.dataTableColumnFamilies) {
@@ -212,22 +211,14 @@ public class Worker {
 						
 						scheduleItem.addToElapsedTime(endTime.getTime() - startTime.getTime());
 
-						Log.info("*** MUST STILL STORE OUTPUT DATA ITEM ***");
-/*						
-						String destinationRowKey = eval.getRowKey()+":"+rr.getRowKey();
-						if (algorithm.outputDataRowkeyPrefix()==Algorithm.ROWKEYPREFIX_EXPLORATION_CONFIG_STAGE) {
-							destinationRowKey = Text.zeroPad(eval.getExplorationNumber())+"."+
-						                        Text.zeroPad(eval.getConfigNumber())+"."+
-						                        Text.zeroPad(eval.getStageNumber())+":"+
-						                        rr.getRowKey();					
-						}				
-						Log.info("      output rowkey "+destinationRowKey);
-						
-						Put put = outputTable.createPutObject(destinationRowKey);
-						put.add("content", "data", result);
-						put = Data.fillInHostMetadata(put);
-						outputTable.put(put);
-*/						
+						// store resulting data item if not null
+						if (outputDataItem!=null) {
+							String destinationRowKey = scheduleItem.getRowKey()+":"+rr.getRowKey();
+							Log.info("      output rowkey "+destinationRowKey);
+							
+							outputDataItem.setRowkey(destinationRowKey);
+							outputDataItem.save(outputDataSource, outputDataTableName);
+						}
 					}
 					
 					resultState = preparedContainer.processPostDataBlock(preparedTask);

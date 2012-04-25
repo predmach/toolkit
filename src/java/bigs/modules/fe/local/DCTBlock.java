@@ -7,9 +7,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import bigs.api.core.Algorithm;
 import bigs.api.core.BIGSParam;
-import bigs.api.featureextraction.FeatureExtractionAlgorithm;
+import bigs.api.fe.FeatureExtractionTask;
 import bigs.modules.fe.utils.DCT;
 import bigs.modules.fe.utils.Image;
 
@@ -24,7 +23,7 @@ import bigs.modules.fe.utils.Image;
  * 11/01/2012	DCTBlock.java
  * @copyright 	Copyright 2012 (c) Bioingenium Research Group
  */
-public class DCTBlock extends FeatureExtractionAlgorithm {
+public class DCTBlock extends FeatureExtractionTask {
 
 	@BIGSParam
     public Integer blocksSize = 8;
@@ -161,10 +160,5 @@ public class DCTBlock extends FeatureExtractionAlgorithm {
 
        return data;
    }
-
-	@Override
-	public Integer outputDataRowkeyPrefix() {
-		return Algorithm.ROWKEYPREFIX_EXPLORATION_CONFIG_STAGE;
-	}
 
 }

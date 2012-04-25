@@ -10,11 +10,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-
-import bigs.api.core.Algorithm;
+import bigs.api.core.BIGSException;
 import bigs.api.data.DataItem;
 import bigs.api.examples.task.IterateAndSplit;
-import bigs.api.exceptions.BIGSException;
 import bigs.api.storage.DataSource;
 import bigs.api.storage.Get;
 import bigs.api.storage.Put;

@@ -1,6 +1,6 @@
 package bigs.core.commands;
 
-import bigs.api.exceptions.BIGSException;
+import bigs.api.core.BIGSException;
 import bigs.core.BIGS;
 import bigs.web.Web;
 
