@@ -45,20 +45,13 @@ public class Worker {
     	
     	// Look what pipeline still has schedule items pending
     	for (Pipeline pipeline: activePipelines) {
+    		// check if all schedule items are done and mark the pipeline done if so
+    		Integer unfinishedScheduleItems=0;
     		for (PipelineStage stage: pipeline.getStages()) {
 	    		Schedule schedule = stage.loadSchedule();
 	    		
-	    		// check if all schedule items are done and mark the pipeline done if so
-	    		Integer unfinishedScheduleItems=0;
 	    		for (ScheduleItem si: schedule.getItems()) {
 	    			if (!si.isStatusDone()) unfinishedScheduleItems ++;
-	    		}
-	    		// if the pipeline is active and all schedule items are done, mark the pipeline as done
-	    		if (unfinishedScheduleItems.equals(0)) {
-	    			pipeline.setStatus(Pipeline.STATUS_DONE);
-	    			pipeline.setTimeDoneFromTimeReference();
-	    			pipeline.save();
-	    			continue;
 	    		}
 	
 	    		// Now select which schedule item within the pipeline
@@ -67,6 +60,13 @@ public class Worker {
 	    		}
 	    		
 	    		// if we got here no schedule item was selected and we move over next pipeline
+    		}
+    		// if the pipeline is active and all schedule items are done, mark the pipeline as done
+    		if (unfinishedScheduleItems.equals(0)) {
+    			pipeline.setStatus(Pipeline.STATUS_DONE);
+    			pipeline.setTimeDoneFromTimeReference();
+    			pipeline.save();
+    			continue;
     		}
     	}
     	return null;
@@ -143,16 +143,16 @@ public class Worker {
 		Log.info("doing "+scheduleItem.toString());
 		
 		if (!scheduleItem.getMethodName().equals("postLoop")) {
-			List<String> parentsRowkeys = scheduleItem.getParentsRowkeys();
-			if (parentsRowkeys.size()>1) {
-				throw new BIGSException("schedule item "+scheduleItem.toString()+" can only have one parent and it has "+parentsRowkeys.size());
+			List<ScheduleItem> parents = scheduleItem.getParents();
+			if (parents.size()>1) {
+				throw new BIGSException("schedule item "+scheduleItem.toString()+" can only have one parent and it has "+parents.size());
 			}
 	
 			State previousState = null;
 			
-			String parentRowkey = null;
-			if (parentsRowkeys.size()>0) parentRowkey = parentsRowkeys.get(0);
-			if (parentRowkey!=null) previousState = schedule.get(parentRowkey).getProcessState();
+			ScheduleItem parent = null;
+			if (parents.size()>0) parent= parents.get(0);
+			if (parent!=null) previousState = parent.getProcessState();
 			
 			State resultState = null;
 			
@@ -230,15 +230,10 @@ public class Worker {
 			
 			scheduleItem.setProcessState(resultState);
 		} else if (methodName.equals(ScheduleItem.METHOD_POSTLOOP)){
-			List<String> parentsRowkeys = scheduleItem.getParentsRowkeys();
+			List<ScheduleItem> parents= scheduleItem.getParents();
 			List<TextSerializable> parentsStates = new ArrayList<TextSerializable>();
-			for (String i: parentsRowkeys) {
-				ScheduleItem parent = schedule.get(i);
-				if (parent==null) {
-					parentsStates.add(null);
-				} else {
-					parentsStates.add(parent.getProcessState());
-				}
+			for (ScheduleItem parent: parents) {
+				parentsStates.add(parent.getProcessState());
 			}
 			
 			State resultState = preparedContainer.processPostLoop(preparedTask, parentsStates);

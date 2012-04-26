@@ -69,6 +69,7 @@ public class PipelinePrepare extends Command {
 			lastScheduleItem = schedule.getLast();
 			Log.info("Pipeline "+pipelineNumber+" generated and saved "+schedule.getItems().size()+" schedule item ");
 			
+/*
 			// then tag data items
 			Log.info("tagging data items ... ");
 			DataSource dataSource = stage.getPreparedInputDataSource();
@@ -118,6 +119,7 @@ public class PipelinePrepare extends Command {
 				rs.close();
 			}		
 			Log.info("data items tagged");
+*/			
 		}
 		
     	// ----------------------------------

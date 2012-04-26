@@ -6,6 +6,8 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.hadoop.hbase.util.Bytes;
+
 import net.sf.jmimemagic.Magic;
 import bigs.api.core.BIGSException;
 import bigs.api.utils.TextUtils;
@@ -17,6 +19,10 @@ public class RawDataItem extends DataItem {
 	Map<String, String> metadata = new HashMap<String, String>();
 	
 	public byte[] getBytes() {
+		return this.bytes;
+	}
+	
+	public byte[] asFileContent() {
 		return this.bytes;
 	}
 
@@ -34,12 +40,12 @@ public class RawDataItem extends DataItem {
 	
 	@Override
 	public String toTextRepresentation() {
-		return new String(bytes);
+		return Bytes.toStringBinary(this.bytes);
 	}
 
 	@Override
 	public void fromTextRepresentation(String textRepresentation) {
-		bytes = textRepresentation.getBytes();
+		bytes = Bytes.toBytesBinary(textRepresentation);
 	}
 	
 	public void setBytesAndRowkeyFromFile(File file) {

@@ -2,6 +2,8 @@ package bigs.core.commands;
 
 import java.io.File;
 
+import org.apache.hadoop.hbase.util.Bytes;
+
 
 import bigs.api.data.DataItem;
 import bigs.api.data.RawDataItem;

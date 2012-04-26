@@ -254,19 +254,28 @@ public class ScheduleItem {
 		return this.parentsRowkeys;
 	}
 	
-	List<ScheduleItem> getParents() {
+	
+	/**
+	 * gets the parent schedule item objects with caching of parents not part
+	 * of this schedule (such as the ones from a previous pipeline stage)
+	 * @return
+	 */
+	Map<String, ScheduleItem> cachedParents = new HashMap<String, ScheduleItem>();
+	public List<ScheduleItem> getParents() {
 		List<ScheduleItem> r = new ArrayList<ScheduleItem>();
 		for (String parentRowkey: this.getParentsRowkeys()) {
-System.out.println(this.getRowkey()+" checking for parent "+parentRowkey);			
 			ScheduleItem item = this.getSchedule().get(parentRowkey);
 			// if the item was not found, try to load it directly from DB as it
 			// probably belongs to another stage
 			if (item==null) {
-				DataSource dataSource = BIGS.globalProperties.getPreparedDataSource();
-				item = ScheduleItem.load(dataSource, null, parentRowkey);
-				Log.info("parent "+parentRowkey+" to item "+this.rowkey+" loaded from datasource");
+				item = cachedParents.get(parentRowkey);
+				if (item==null) {
+					DataSource dataSource = BIGS.globalProperties.getPreparedDataSource();
+					item = ScheduleItem.load(dataSource, null, parentRowkey);
+					cachedParents.put(parentRowkey, item);
+				}
 			}
-			if (item!=null) r.add(item);
+			r.add(item);
 		}
 		return r;
 	}
@@ -329,7 +338,6 @@ System.out.println(this.getRowkey()+" checking for parent "+parentRowkey);
 	static public ScheduleItem fromResultObject(Schedule schedule, Result result) {
 		ScheduleItem r = ScheduleItem.fromRowKey(schedule, result.getRowKey());
 		
-System.out.println("loading schedule item "+r.getRowkey());		
 		byte[] stat = result.getValue("bigs", "status");
 		if (stat!=null) {
 			r.setStatusFromString(new String(stat));
@@ -369,7 +377,9 @@ System.out.println("loading schedule item "+r.getRowkey());
 		r.preparedTask = TaskHelper.fromResultObject(result, "scheduling", "task.class", "task.object");
 		r.processState = State.fromResultObject(result, "content", "class", "data");
 		r.preparedTaskContainer = TaskContainer.fromResultObject(result, "scheduling", "task.container.class", "task.container.object");
-		
+		if (schedule!=null) {
+			r.preparedTaskContainer.setPipelineStage(schedule.getPipelineStage());
+		}
 		r.tags = result.getFamilyMap("tags");
 		
 		return r;
@@ -428,19 +438,6 @@ System.out.println("loading schedule item "+r.getRowkey());
 		for (String family: ScheduleItem.columnFamilies) {
 			get.addFamily(family);
 		}
-		get.addColumn("bigs", "timestart");
-		get.addColumn("bigs", "timedone");
-		get.addColumn("bigs", "lastupdate");
-		get.addColumn("bigs", "hostname");
-		get.addColumn("bigs", "uuid");
-		get.addColumn("scheduling", "task.class");
-		get.addColumn("scheduling", "task.object");
-		get.addColumn("scheduling", "task.container.object");
-		get.addColumn("scheduling", "task.container.object");
-		get.addColumn("scheduling", "method");
-		get.addColumn("scheduling", "parents");
-		get.addColumn("content", "data");
-		get.addColumn("content", "class");
 		return get;
 	}	
 

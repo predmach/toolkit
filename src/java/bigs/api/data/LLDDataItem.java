@@ -17,6 +17,10 @@ public class LLDDataItem extends DataItem {
 		this.data = data;
 	}
 	
+	public byte[] asFileContent() {
+		return this.toTextRepresentation().getBytes();
+	}
+	
 	public List<List<Double>> getLLD() {
 		return this.data;
 	}

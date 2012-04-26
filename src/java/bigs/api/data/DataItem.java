@@ -28,6 +28,8 @@ public abstract class DataItem implements TextSerializable {
 
 	public abstract void setMetadata(Map<String, String> metadata);
 	
+	public abstract byte[] asFileContent();
+	
 	public void setRowkey(String rowkey){
 		this.rowkey = rowkey;
 	}

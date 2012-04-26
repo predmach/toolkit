@@ -20,7 +20,7 @@ import bigs.core.utils.Log;
 import bigs.modules.containers.DataPartitionTaskContainer;
 import bigs.modules.containers.IterativeTaskContainer;
 
-public class IterateAndSplit implements DataPartitionTask<IterateAndSplitState, LLDDataItem, LLDDataItem>, IterativeTask<IterateAndSplitState, DataItem, DataItem> {
+public class IterateAndSplit implements DataPartitionTask<StateWithDoubleValue, LLDDataItem, LLDDataItem>, IterativeTask<StateWithDoubleValue, DataItem, DataItem> {
 
 	@BIGSParam
 	public Integer numberOfIterations;
@@ -73,36 +73,36 @@ public class IterateAndSplit implements DataPartitionTask<IterateAndSplitState, 
 	    -------------------------------------------------------------------*/
 
 	@Override
-	public IterateAndSplitState startIteration(IterateAndSplitState previousState) {	
+	public StateWithDoubleValue startIteration(StateWithDoubleValue previousState) {	
 		previousState.value = previousState.value +1D;
 		return previousState;
 	}
 
 
 	@Override
-	public IterateAndSplitState finalizeIteration(IterateAndSplitState previousState) {
+	public StateWithDoubleValue finalizeIteration(StateWithDoubleValue previousState) {
 		previousState.value = previousState.value/5.0D;
 		return previousState;
 	}
 
 
 	@Override
-	public IterateAndSplitState beforeAllIterations(IterateAndSplitState previousState) {
+	public StateWithDoubleValue beforeAllIterations(StateWithDoubleValue previousState) {
 		if (previousState == null) {
-			previousState = new IterateAndSplitState();
+			previousState = new StateWithDoubleValue();
 		}
 		previousState.value = 1D;
 		return previousState;
 	}
 
 	@Override
-	public IterateAndSplitState afterAllIterations(List<IterateAndSplitState> previousStates) {
+	public StateWithDoubleValue afterAllIterations(List<StateWithDoubleValue> previousStates) {
 		
 		if (previousStates.size()!=1) {
 			throw new BIGSException("expecting only one iteration state in sequential process");
 		}
 		
-		IterateAndSplitState k = previousStates.get(0);
+		StateWithDoubleValue k = previousStates.get(0);
 		k.value = k.value/6D;
 		Log.info("---> FINAL STATE "+k.toTextRepresentation());
 		return k;
@@ -111,13 +111,13 @@ public class IterateAndSplit implements DataPartitionTask<IterateAndSplitState, 
 
 	
 	@Override
-	public void startDataBlock(IterateAndSplitState previousState) {}
+	public void startDataBlock(StateWithDoubleValue previousState) {}
 
 	@Override
 	public DataItem processIterativeDataItem(DataItem item) { return null; }
 
 	@Override
-	public IterateAndSplitState finalizeDataBlock() { return null; }
+	public StateWithDoubleValue finalizeDataBlock() { return null; }
 
 
 	/** -------------------------------------------------------------------
@@ -126,45 +126,45 @@ public class IterateAndSplit implements DataPartitionTask<IterateAndSplitState, 
   
       	-------------------------------------------------------------------*/
 
-	IterateAndSplitState partitionState = new IterateAndSplitState();
+	StateWithDoubleValue partitionState = new StateWithDoubleValue();
 	@Override
-	public void startPartition(IterateAndSplitState previousState) {
+	public void startPartition(StateWithDoubleValue previousState) {
 		partitionState.value = previousState.value*3;
 	}
 
 
 	@Override
-	public IterateAndSplitState finalizePartition() {
+	public StateWithDoubleValue finalizePartition() {
 		partitionState.value = partitionState.value*4;
 		return partitionState;
 	}
 
 
 	@Override
-	public IterateAndSplitState beforeProcessingAllPartitions(IterateAndSplitState previousState) {
+	public StateWithDoubleValue beforeProcessingAllPartitions(StateWithDoubleValue previousState) {
 		previousState.value = previousState.value + 2;
 		return previousState;
 	}
 
 
 	@Override
-	public IterateAndSplitState afterProcessingAllPartitions(List<IterateAndSplitState> previousStates) {
-		IterateAndSplitState s = new IterateAndSplitState();
+	public StateWithDoubleValue afterProcessingAllPartitions(List<StateWithDoubleValue> previousStates) {
+		StateWithDoubleValue s = new StateWithDoubleValue();
 		s.value=0D;
-		for (IterateAndSplitState p: previousStates) {
+		for (StateWithDoubleValue p: previousStates) {
 			s.value = s.value + p.value;
 		}
 		return s;
 	}
 
 	@Override
-	public IterateAndSplitState beforeProcessingPartitionSubContainers(IterateAndSplitState previousState) {
+	public StateWithDoubleValue beforeProcessingPartitionSubContainers(StateWithDoubleValue previousState) {
 		return previousState;
 	}
 
 
 	@Override
-	public IterateAndSplitState afterProcessingPartitionSubContainers(IterateAndSplitState previousState) {
+	public StateWithDoubleValue afterProcessingPartitionSubContainers(StateWithDoubleValue previousState) {
 		return previousState;
 	}
 

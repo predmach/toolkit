@@ -3,6 +3,8 @@ package bigs.core.commands;
 import java.io.File;
 import java.io.FileOutputStream;
 
+import bigs.api.data.DataItem;
+import bigs.api.data.RawDataItem;
 import bigs.api.storage.DataSource;
 import bigs.api.storage.Result;
 import bigs.api.storage.ResultScanner;
@@ -38,9 +40,9 @@ public class DownloadFiles extends Command {
     	while ( (r=scanner.next())!=null ) {
     		File destFile = new File (destinationDir, r.getRowKey());
     		Log.info("downloading to file "+destFile.getName());
-    		byte[] content = r.getValue("content", "data");
+    		DataItem dataItem = DataItem.fromResult(r);
     		FileOutputStream fstream = new FileOutputStream(destFile);
-    		fstream.write(content);
+    		fstream.write(dataItem.asFileContent());
     		fstream.close();
     	}
     	

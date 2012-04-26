@@ -11,7 +11,7 @@ import bigs.api.core.State;
 import bigs.api.core.TextSerializable;
 
 
-public class IterateAndSplitState extends State {
+public class StateWithDoubleValue extends State {
 
 	public Double value = 0D;
 	
