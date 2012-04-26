@@ -16,6 +16,7 @@ import bigs.api.storage.DataSource;
 import bigs.api.storage.Table;
 import bigs.core.BIGS;
 import bigs.core.exceptions.BIGSTableExistsException;
+import bigs.core.utils.Log;
 
 
 public class HBaseDataSource implements DataSource {
@@ -44,6 +45,10 @@ public class HBaseDataSource implements DataSource {
 	@Override
 	public Boolean isAlive() {
 		try {
+			if (hadmin==null) {
+				Log.info("no conection to hbase yet");
+				return false;
+			}
 			return hadmin.isMasterRunning();
 		} catch (MasterNotRunningException e) {
 			return false;

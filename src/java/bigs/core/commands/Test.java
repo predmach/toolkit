@@ -149,15 +149,15 @@ System.out.println();
 System.out.println();    	
 		for (ScheduleItem si: schedule.getItems()) {
 			String parents = "";
-			for (Integer pi: si.getParentsIds()) {
+			for (String pi: si.getParentsRowkeys()) {
 				parents = parents + pi ;
-				if (pi!=si.getParentsIds().get(si.getParentsIds().size()-1)) {
+				if (pi!=si.getParentsRowkeys().get(si.getParentsRowkeys().size()-1)) {
 					parents = parents + " ";
 				}
 			}
 
 			String prefix = "";
-			System.out.println(Text.zeroPad(new Long(si.getId()),3)+" "
+			System.out.println(Text.zeroPad(new Long(si.getRowkey()),3)+" "
 		                      +prefix+  " ("+parents+") " +si.toString());
 		}
     	
@@ -171,15 +171,15 @@ System.out.println();
 		
 		for (ScheduleItem si: p2ss.getItems()) {
 			String parents = "";
-			for (Integer pi: si.getParentsIds()) {
+			for (String pi: si.getParentsRowkeys()) {
 				parents = parents + pi ;
-				if (pi!=si.getParentsIds().get(si.getParentsIds().size()-1)) {
+				if (pi!=si.getParentsRowkeys().get(si.getParentsRowkeys().size()-1)) {
 					parents = parents + " ";
 				}
 			}
 
 			String prefix = "";
-			System.out.println(Text.zeroPad(new Long(si.getId()),3)+" "
+			System.out.println(Text.zeroPad(new Long(si.getRowkey()),3)+" "
 		                      +prefix+  " ("+parents+") " +si.toString());
 		}
     }

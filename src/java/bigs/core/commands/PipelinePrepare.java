@@ -55,13 +55,18 @@ public class PipelinePrepare extends Command {
 		if (stages.size()==0) {
 			throw new BIGSException("no stages defined in pipeline file");
 		}
+		ScheduleItem lastScheduleItem = null;
 		
 		for (PipelineStage stage: stages) {
 			Log.info("Processing stage number "+stages.indexOf(stage));
 			
 			// first generate the schedule
 			Schedule schedule = stage.generateSchedule();
-			schedule.save();    	
+			if (lastScheduleItem!=null) {
+				schedule.getFirst().addParentRowkey(lastScheduleItem.getRowkey());
+			}			
+			schedule.save();    
+			lastScheduleItem = schedule.getLast();
 			Log.info("Pipeline "+pipelineNumber+" generated and saved "+schedule.getItems().size()+" schedule item ");
 			
 			// then tag data items

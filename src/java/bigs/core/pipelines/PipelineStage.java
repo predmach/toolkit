@@ -29,7 +29,6 @@ public class PipelineStage {
 		stagePrefix = lprefix+"."+Text.zeroPad(new Long(stageNumber), 2);
 		try {
 			Object obj = Core.getPreparedObject("task", Task.class, exploration, stagePrefix);
-			System.out.println("class is "+obj.getClass().getName());
 			this.preparedTask = Core.getPreparedObject("task", Task.class, exploration, stagePrefix);
 		} catch (BIGSPropertyNotFoundException e) {
 			throw new BIGSException(e.getMessage());

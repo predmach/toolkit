@@ -25,6 +25,7 @@ import bigs.api.utils.TextUtils;
 import bigs.core.BIGS;
 import bigs.core.utils.Core;
 import bigs.core.utils.Data;
+import bigs.core.utils.Log;
 import bigs.core.utils.Text;
 
 
@@ -52,9 +53,9 @@ public class ScheduleItem {
 		                                                 "  FAILED  " };
 	
 	String methodName;
-	List<Integer> parentsIds = new ArrayList<Integer>();
+	List<String> parentsRowkeys = new ArrayList<String>();
 	Schedule schedule;
-	Integer id;
+	String rowkey;
 
 	Date lastUpdate  = new Date(Core.getTime());
 	Long elapsedTime = 0L;
@@ -75,7 +76,7 @@ public class ScheduleItem {
 	
 	public ScheduleItem(Schedule schedule) {
 		this.schedule = schedule;
-		schedule.addItem(this);
+		schedule.addItem(this);	
 	}
 				
 	public ScheduleItem (Schedule schedule, 
@@ -88,12 +89,19 @@ public class ScheduleItem {
 		this.preparedTaskContainer = configuredTaskContainer;
 	}
 	
-	public Integer getId() {
-		return this.id;
+	public String getRowkey() {
+		return this.rowkey;
 	}
 	
-	public void setId(Integer id) {
-		this.id = id;
+	public void setRowkey(String rowkey) {
+		this.rowkey = rowkey;
+	}
+	
+	public void buildRowkey(Integer thisItemId) {
+		String explorationNumber = Text.zeroPad(new Long(this.schedule.pipelineStage.pipeline.getPipelineNumber()), 5);
+		String stageNumber = Text.zeroPad(new Long(this.schedule.pipelineStage.getStageNumber()),5);
+		String scheduleItemNumber = Text.zeroPad(new Long(thisItemId), 5);	
+		this.rowkey = explorationNumber + "." + stageNumber + "." + scheduleItemNumber;		
 	}
 	
 	public Schedule getSchedule() {
@@ -230,26 +238,34 @@ public class ScheduleItem {
 		throw new BIGSException("status "+statusString.trim()+" not recognized for a schedule item");
 	}
 
-	public ScheduleItem addParentId(Integer parentId) {
-		if (parentId!=null) {
-			this.parentsIds.add(parentId);
+	public ScheduleItem addParentRowkey(String parentRowkey) {
+		if (parentRowkey!=null) {
+			this.parentsRowkeys.add(parentRowkey);
 		}
 		return this;
 	}
 	
-	public ScheduleItem addParentsIds (List<Integer> parentsIds) {
-		for (Integer i: parentsIds) this.parentsIds.add(i);
+	public ScheduleItem addParentsRowkey (List<String> parentsRowkeys) {
+		for (String i: parentsRowkeys) this.parentsRowkeys.add(i);
 		return this;
 	}
 	
-	public List<Integer> getParentsIds() {
-		return this.parentsIds;
+	public List<String> getParentsRowkeys() {
+		return this.parentsRowkeys;
 	}
 	
 	List<ScheduleItem> getParents() {
 		List<ScheduleItem> r = new ArrayList<ScheduleItem>();
-		for (Integer parentId: this.getParentsIds()) {
-			ScheduleItem item = this.getSchedule().get(parentId);
+		for (String parentRowkey: this.getParentsRowkeys()) {
+System.out.println(this.getRowkey()+" checking for parent "+parentRowkey);			
+			ScheduleItem item = this.getSchedule().get(parentRowkey);
+			// if the item was not found, try to load it directly from DB as it
+			// probably belongs to another stage
+			if (item==null) {
+				DataSource dataSource = BIGS.globalProperties.getPreparedDataSource();
+				item = ScheduleItem.load(dataSource, null, parentRowkey);
+				Log.info("parent "+parentRowkey+" to item "+this.rowkey+" loaded from datasource");
+			}
 			if (item!=null) r.add(item);
 		}
 		return r;
@@ -272,18 +288,7 @@ public class ScheduleItem {
 	public void setTags(Map<String, String> tags) {
 		this.tags = tags;
 	}
-	
-	/**
-	 * returns as string representation of the rowkey corresponding to this schedule item
-	 * @return
-	 */
-	public String getRowKey() {
-		String explorationNumber = Text.zeroPad(new Long(this.schedule.pipelineStage.pipeline.getPipelineNumber()), 5);
-		String stageNumber = Text.zeroPad(new Long(this.schedule.pipelineStage.getStageNumber()),5);
-		String scheduleItemNumber = Text.zeroPad(new Long(this.id), 5);	
-		return explorationNumber + "." + stageNumber + "." + scheduleItemNumber;
-	}
-	
+		
 
 	/**
 	 * builds an empty SchedueItem object from the string representation of its rowkey.
@@ -299,14 +304,19 @@ public class ScheduleItem {
 		}
 		Integer pipelineNumber = new Integer(s[0]);
 		Integer stageNumber = new Integer(s[1]);
-		Integer scheduleItemNumber = new Integer(s[2]);
-		if (!schedule.pipelineStage.stageNumber.equals(stageNumber) ||
-			!schedule.pipelineStage.pipeline.getPipelineNumber().equals(pipelineNumber)) {
-			throw new BIGSException("error reconstructing schedule item rowkey "+k+" does not correspond to exploration "+pipelineNumber+" / stage "+stageNumber);			
+		
+		ScheduleItem r = null;
+		if (schedule!=null) {
+			if (!schedule.pipelineStage.getStageNumber().equals(stageNumber) ||
+				!schedule.pipelineStage.pipeline.getPipelineNumber().equals(pipelineNumber)) {
+				throw new BIGSException("error reconstructing schedule item rowkey "+k+" does not correspond to pipeline "+schedule.pipelineStage.getPipeline().getPipelineNumber()+" / stage "+schedule.pipelineStage.getStageNumber());			
+			}
+			r = new ScheduleItem(schedule);
+		} else {
+			r = new ScheduleItem();
 		}
 		
-		ScheduleItem r = new ScheduleItem(schedule);
-		r.setId(scheduleItemNumber);
+		r.setRowkey(k);
 		return r;
 	}
 	
@@ -319,7 +329,7 @@ public class ScheduleItem {
 	static public ScheduleItem fromResultObject(Schedule schedule, Result result) {
 		ScheduleItem r = ScheduleItem.fromRowKey(schedule, result.getRowKey());
 		
-		
+System.out.println("loading schedule item "+r.getRowkey());		
 		byte[] stat = result.getValue("bigs", "status");
 		if (stat!=null) {
 			r.setStatusFromString(new String(stat));
@@ -353,7 +363,7 @@ public class ScheduleItem {
 		String parentsIdsString = new String(result.getValue("scheduling", "parents"));
 		
 		if (parentsIdsString!=null && !parentsIdsString.trim().isEmpty()) {
-			r.parentsIds = Text.parseObjectList(parentsIdsString, " ", Integer.class);
+			r.parentsRowkeys = Text.parseObjectList(parentsIdsString, " ", String.class);
 		}
 		
 		r.preparedTask = TaskHelper.fromResultObject(result, "scheduling", "task.class", "task.object");
@@ -385,8 +395,7 @@ public class ScheduleItem {
 		}
 		
 		put.add("bigs","status", Bytes.toBytes(this.getStatusAsString()));
-		
-		put.add("scheduling", "parents", Bytes.toBytes(Text.collate(this.parentsIds.toArray(), " ")));
+		put.add("scheduling", "parents", Bytes.toBytes(Text.collate(this.parentsRowkeys.toArray(), " ")));
 		
 		put.add("scheduling", "method", Bytes.toBytes(this.getMethodName()));
 				
@@ -457,7 +466,7 @@ public class ScheduleItem {
 	public void save() {
     	DataSource dataSource = BIGS.globalProperties.getPreparedDataSource();
     	Table table = dataSource.getTable(ScheduleItem.tableName);
-    	table.put(Data.fillInHostMetadata(this.fillPutObject(table.createPutObject(this.getRowKey()))));				
+    	table.put(Data.fillInHostMetadata(this.fillPutObject(table.createPutObject(this.getRowkey()))));				
 	}
 		
 	/**
@@ -471,11 +480,11 @@ public class ScheduleItem {
 	 */
 	public Boolean markAlive(DataSource dataSource) {
 		Table table = dataSource.getTable(ScheduleItem.tableName);
-		Put put = table.createPutObject(this.getRowKey());
+		Put put = table.createPutObject(this.getRowkey());
 		this.lastUpdate = new Date(Core.getTime());
 		put = this.fillPutObject(put);
 		put = Data.fillInHostMetadata(put);		
-		Boolean r = table.checkAndPut(this.getRowKey(), "bigs", "uuid", Core.myUUID.getBytes(), put);
+		Boolean r = table.checkAndPut(this.getRowkey(), "bigs", "uuid", Core.myUUID.getBytes(), put);
 		return r;
 	}
 	
@@ -484,14 +493,15 @@ public class ScheduleItem {
 		ScheduleItem r = new ScheduleItem(this.schedule);
 		r.preparedTask = this.preparedTask;
 		r.preparedTaskContainer = this.preparedTaskContainer;
-		r.id = this.id;
-		r.parentsIds = this.parentsIds;
+		r.rowkey = this.rowkey;
+		r.parentsRowkeys = this.parentsRowkeys;
 		r.hostnameStored = this.hostnameStored;
 		r.uuiStored = this.uuiStored;
 		r.lastUpdate = this.lastUpdate;
 		r.status = this.status;
 		r.elapsedTime = this.elapsedTime;
 		r.processState = this.processState;
+		r.rowkey = this.rowkey;
 		return r;
 	}
 	
@@ -522,7 +532,7 @@ public class ScheduleItem {
 			Boolean anyParentNotFinished = false;
 			for (ScheduleItem parent: this.getParents()) {
 				if (parent==null) {
-					throw new BIGSException("parent for schedule item "+this.getRowKey()+" not found");
+					throw new BIGSException("parent for schedule item "+this.getRowkey()+" not found");
 				}
 				if (!parent.isStatusDone()) {
 					anyParentNotFinished = true;
@@ -536,7 +546,7 @@ public class ScheduleItem {
 	}
 		
 	public String toString() {
-		String r = this.getRowKey()+" "+preparedTaskContainer.toString()+ " "+	preparedTask.toString() + " " + methodName;
+		String r = this.getRowkey()+" "+preparedTaskContainer.toString()+ " "+	preparedTask.toString() + " " + methodName;
 		return r;
 	}
 	

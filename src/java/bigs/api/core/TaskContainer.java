@@ -159,34 +159,34 @@ public abstract class TaskContainer<T extends Task> implements Configurable, Tex
 		// recurses over the existing subcontainers
 		if (!this.taskContainers.isEmpty()) {
 			ScheduleItem p1 = new ScheduleItem(schedule, this, pipelineStage.getPreparedTask(), ScheduleItem.METHOD_PRESUBCONTAINERS);
-			if (parentScheduleItem!=null) p1.addParentId(parentScheduleItem.getId());
+			if (parentScheduleItem!=null) p1.addParentRowkey(parentScheduleItem.getRowkey());
 
 			TaskContainer<? extends Task> th = this.taskContainers.get(0).clone();
-			ScheduleItem p2 = new ScheduleItem(schedule, th, pipelineStage.getPreparedTask(),  ScheduleItem.METHOD_PRELOOP).addParentId(p1.getId());
+			ScheduleItem p2 = new ScheduleItem(schedule, th, pipelineStage.getPreparedTask(),  ScheduleItem.METHOD_PRELOOP).addParentRowkey(p1.getRowkey());
 
-			List<Integer> subContainerParentsIds = new ArrayList<Integer>();
+			List<String> subContainerParentsRowkeys = new ArrayList<String>();
 			if (this.taskContainers.size()>0) {
 				Boolean isParallel = th.supportsParallelization();
 				ScheduleItem parent = p2;
 				for (TaskContainer<? extends Task> tb: this.taskContainers) {
 					ScheduleItem item = tb.fillSchedule(schedule, parent, clonedTags);
 					if (isParallel) {
-						subContainerParentsIds.add(item.getId());
+						subContainerParentsRowkeys.add(item.getRowkey());
 					} else {
 						if (tb == this.taskContainers.get(this.taskContainers.size()-1)) {
-							subContainerParentsIds.add(item.getId());
+							subContainerParentsRowkeys.add(item.getRowkey());
 						}
 						parent = item;
 					}				
 				}
 			}
 				
-			ScheduleItem p3 = new ScheduleItem(schedule, th	, pipelineStage.getPreparedTask(), ScheduleItem.METHOD_POSTLOOP).addParentsIds(subContainerParentsIds);
+			ScheduleItem p3 = new ScheduleItem(schedule, th	, pipelineStage.getPreparedTask(), ScheduleItem.METHOD_POSTLOOP).addParentsRowkey(subContainerParentsRowkeys);
 			
-			ScheduleItem p4 = new ScheduleItem(schedule, this, pipelineStage.getPreparedTask(), ScheduleItem.METHOD_POSTSUBCONTAINERS).addParentId(p3.getId());
+			ScheduleItem p4 = new ScheduleItem(schedule, this, pipelineStage.getPreparedTask(), ScheduleItem.METHOD_POSTSUBCONTAINERS).addParentRowkey(p3.getRowkey());
 			return p4;
 		} else {
-			ScheduleItem p = new ScheduleItem(schedule, this, pipelineStage.getPreparedTask(), ScheduleItem.METHOD_LOOPDATA).addParentId(parentScheduleItem.getId());
+			ScheduleItem p = new ScheduleItem(schedule, this, pipelineStage.getPreparedTask(), ScheduleItem.METHOD_LOOPDATA).addParentRowkey(parentScheduleItem.getRowkey());
 			p.setTags(clonedTags);
 			return p;
 		}

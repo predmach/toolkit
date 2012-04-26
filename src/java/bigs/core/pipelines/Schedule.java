@@ -25,13 +25,29 @@ public class Schedule {
 	
 	public void addItem(ScheduleItem item) {
 		items.add(item);
-		if (item.getId()==null) {
-			item.setId(items.indexOf(item));			
+		if (item.getRowkey()==null || item.getRowkey().isEmpty()) {
+			item.buildRowkey(items.indexOf(item));			
 		}
 	}
 	
 	public List<ScheduleItem> getItems() {
 		return items;
+	}
+	
+	public ScheduleItem getFirst() {
+		if (this.items.size()>0) {
+			return this.items.get(0);
+		} else {
+			return null;
+		}
+	}
+	
+	public ScheduleItem getLast() {
+		if (this.items.size()>0) {
+			return this.items.get(this.items.size()-1);
+		} else {
+			return null;
+		}
 	}
 	
 	/**
@@ -41,9 +57,9 @@ public class Schedule {
 	 * @param index the index of the item to retreive
 	 * @return the schedule item. NULL if none was found
 	 */
-	public ScheduleItem get(Integer id) {
+	public ScheduleItem get(String rowkey) {
 		for (ScheduleItem si: this.items) {
-			if (si.getId().equals(id)) {
+			if (si.getRowkey().equals(rowkey)) {
 				return si;
 			}
 		}
@@ -70,16 +86,15 @@ public class Schedule {
 
 		ScheduleItem dummyStart = new ScheduleItem();
 		dummyStart.schedule = r;
-		dummyStart.setId(0);
-				
+		dummyStart.buildRowkey(0);
 		ScheduleItem dummyStop = new ScheduleItem();
 		dummyStop.schedule = r;
-		dummyStop.setId(new Integer(999999999));
+		dummyStop.buildRowkey(99999);
 
 		Table table = dataSource.getTable(ScheduleItem.tableName);
 		Scan scan = table.createScanObject();
-		scan.setStartRow(dummyStart.getRowKey());
-		scan.setStopRow(dummyStop.getRowKey());
+		scan.setStartRow(dummyStart.getRowkey());
+		scan.setStopRow(dummyStop.getRowkey());
 		
 		ResultScanner rs = table.getScan(scan);
 		

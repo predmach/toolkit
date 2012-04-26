@@ -185,7 +185,7 @@ Log.info("----- using bigsproperties ----\n"+configuration);
 				while (true) {
 					dots=dots+".";
 					if (worker!=null && worker.currentScheduleItem!=null) {
-						label.setText("Working on: "+worker.currentScheduleItem.getRowKey()+" "+dots);
+						label.setText("Working on: "+worker.currentScheduleItem.getRowkey()+" "+dots);
 					} else {
 						label.setText("Worker idle");
 					}

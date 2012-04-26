@@ -35,9 +35,6 @@ public class Worker {
 	
 	Boolean abort = false;
 	
-
-
-	
 	ScheduleItem selectNextScheduleItem() {
 		
 		// retrieve the pipelines which are active in the DB
@@ -48,27 +45,29 @@ public class Worker {
     	
     	// Look what pipeline still has schedule items pending
     	for (Pipeline pipeline: activePipelines) {
-    		Schedule schedule = pipeline.getStages().get(0).loadSchedule();
-    		
-    		// check if all schedule items are done and mark the pipeline done if so
-    		Integer unfinishedScheduleItems=0;
-    		for (ScheduleItem si: schedule.getItems()) {
-    			if (!si.isStatusDone()) unfinishedScheduleItems ++;
+    		for (PipelineStage stage: pipeline.getStages()) {
+	    		Schedule schedule = stage.loadSchedule();
+	    		
+	    		// check if all schedule items are done and mark the pipeline done if so
+	    		Integer unfinishedScheduleItems=0;
+	    		for (ScheduleItem si: schedule.getItems()) {
+	    			if (!si.isStatusDone()) unfinishedScheduleItems ++;
+	    		}
+	    		// if the pipeline is active and all schedule items are done, mark the pipeline as done
+	    		if (unfinishedScheduleItems.equals(0)) {
+	    			pipeline.setStatus(Pipeline.STATUS_DONE);
+	    			pipeline.setTimeDoneFromTimeReference();
+	    			pipeline.save();
+	    			continue;
+	    		}
+	
+	    		// Now select which schedule item within the pipeline
+	    		for (ScheduleItem scheduleItem: schedule.getItems()) {
+	    			if (scheduleItem.canProcess()) return scheduleItem;												
+	    		}
+	    		
+	    		// if we got here no schedule item was selected and we move over next pipeline
     		}
-    		// if the pipeline is active and all schedule items are done, mark the pipeline as done
-    		if (unfinishedScheduleItems.equals(0)) {
-    			pipeline.setStatus(Pipeline.STATUS_DONE);
-    			pipeline.setTimeDoneFromTimeReference();
-    			pipeline.save();
-    			continue;
-    		}
-
-    		// Now select which schedule item within the pipeline
-    		for (ScheduleItem scheduleItem: schedule.getItems()) {
-    			if (scheduleItem.canProcess()) return scheduleItem;												
-    		}
-    		
-    		// if we got here no schedule item was selected and we move over next pipeline
     	}
     	return null;
 		
@@ -93,16 +92,16 @@ public class Worker {
 	    		if (scheduleItem!=null) {
 					// set status to INPROGRESS and take over the split
 					Table evalTable = BIGS.globalProperties.getPreparedDataSource().getTable(ScheduleItem.tableName);
-					Put put = evalTable.createPutObject(scheduleItem.getRowKey());
+					Put put = evalTable.createPutObject(scheduleItem.getRowkey());
 					scheduleItem.setStatusInProgress();
 					put = scheduleItem.fillPutObject(put);
 					put = Data.fillInHostMetadata(put);
-					Boolean success = evalTable.checkAndPut(scheduleItem.getRowKey(), "bigs", "status", ScheduleItem.statusStrings[ScheduleItem.STATUS_PENDING].getBytes(), put);
+					Boolean success = evalTable.checkAndPut(scheduleItem.getRowkey(), "bigs", "status", ScheduleItem.statusStrings[ScheduleItem.STATUS_PENDING].getBytes(), put);
 					// if we did not succeed in setting the status to pending it is because somebody else did and it is working on it
 					if (success) {
 						Pipeline pipeline = scheduleItem.getSchedule().getPipelineStage().getPipeline();
 						
-						if (scheduleItem.getId().equals(0)) {
+						if (scheduleItem.getRowkey().equals(0)) {
 							pipeline.setTimeStartFromTimeReference();
 							pipeline.setTimeDone(null);
 							pipeline.save();
@@ -144,16 +143,16 @@ public class Worker {
 		Log.info("doing "+scheduleItem.toString());
 		
 		if (!scheduleItem.getMethodName().equals("postLoop")) {
-			List<Integer> parentsIds = scheduleItem.getParentsIds();
-			if (parentsIds.size()>1) {
-				throw new BIGSException("schedule item "+scheduleItem.toString()+" can only have one parent and it has "+parentsIds.size());
+			List<String> parentsRowkeys = scheduleItem.getParentsRowkeys();
+			if (parentsRowkeys.size()>1) {
+				throw new BIGSException("schedule item "+scheduleItem.toString()+" can only have one parent and it has "+parentsRowkeys.size());
 			}
 	
 			State previousState = null;
 			
-			Integer parentId = null;
-			if (parentsIds.size()>0) parentId = parentsIds.get(0);
-			if (parentId!=null) previousState = schedule.get(parentId).getProcessState();
+			String parentRowkey = null;
+			if (parentsRowkeys.size()>0) parentRowkey = parentsRowkeys.get(0);
+			if (parentRowkey!=null) previousState = schedule.get(parentRowkey).getProcessState();
 			
 			State resultState = null;
 			
@@ -213,7 +212,7 @@ public class Worker {
 
 						// store resulting data item if not null
 						if (outputDataItem!=null) {
-							String destinationRowKey = scheduleItem.getRowKey()+":"+rr.getRowKey();
+							String destinationRowKey = scheduleItem.getRowkey()+":"+rr.getRowKey();
 							Log.info("      output rowkey "+destinationRowKey);
 							
 							outputDataItem.setRowkey(destinationRowKey);
@@ -231,9 +230,9 @@ public class Worker {
 			
 			scheduleItem.setProcessState(resultState);
 		} else if (methodName.equals(ScheduleItem.METHOD_POSTLOOP)){
-			List<Integer> parentsIds = scheduleItem.getParentsIds();
+			List<String> parentsRowkeys = scheduleItem.getParentsRowkeys();
 			List<TextSerializable> parentsStates = new ArrayList<TextSerializable>();
-			for (Integer i: parentsIds) {
+			for (String i: parentsRowkeys) {
 				ScheduleItem parent = schedule.get(i);
 				if (parent==null) {
 					parentsStates.add(null);
@@ -280,14 +279,14 @@ public class Worker {
                         }
                         if (bigsDataSource!=null && worker.currentScheduleItem!=null) {                        	
                                 synchronized(worker.currentScheduleItem) {
-                                	ScheduleItem storedScheduleItem = ScheduleItem.load(BIGS.globalProperties.getPreparedDataSource(), currentScheduleItem.getSchedule(), currentScheduleItem.getRowKey());
+                                	ScheduleItem storedScheduleItem = ScheduleItem.load(BIGS.globalProperties.getPreparedDataSource(), currentScheduleItem.getSchedule(), currentScheduleItem.getRowkey());
                                 	if (!storedScheduleItem.getUuidStored().equals(Core.myUUID)) {
                                 		Log.error("current schedule item has been updated by another worker. stopping whenever possible. ");
                                 	} else if (currentScheduleItem!=null) {
                                 		worker.currentScheduleItem.markAlive(bigsDataSource);                           
                                 	}
                                 }
-                                Log.debug("worker alive updated in schedule item "+worker.currentScheduleItem.getRowKey());
+                                Log.debug("worker alive updated in schedule item "+worker.currentScheduleItem.getRowkey());
                         }
                 }               
         }
